@@ -1,0 +1,16 @@
+
+# The defualt pipeline 
+# (1) Tokenizes the text
+# (2) Split the text into Sentences
+# (3) POS tags sentences
+# (4) Lemmatize words
+# (5) Detect Named Entities
+# 
+annotators = tokenize, ssplit, pos, lemma, ner
+
+# Optional Analyzers that could be added
+# regexner
+
+# NOTE:
+# Models are provided by the stanford-corenlp-models jar
+# they are loaded from the jar file via the default paths

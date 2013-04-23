@@ -1,0 +1,72 @@
+<html>
+  <head>
+
+    <title>Apache Stanbol Stanford NLP RESTful Service</title>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+
+    <!-- to be moved in the dedicated fragment -->
+    <link rel="stylesheet" href="/static/stanbol.css" />
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
+
+  </head>
+
+  <body>
+    <div class="home"><a href="/"><img src="/static/apache_stanbol_logo_cropped.png" alt="Stanbol Home" /></a>
+    <br/><a href="http://nlp.stanford.edu"><img style="margin-left: 10px;" height="100px" alt="Stanford NLP" 
+        src="/static/stanford_nlp_logo.png" /></a></div>
+    <div class="header">
+      <h1>Apache Stanbol Stanford NLP Integration Server</h1>
+
+      <div class="mainNavigationMenu">
+      <ul>
+        <li class="unselected"><a href="/analysis">/analysis</a></li>
+      </ul>
+      </div>
+      <div style="clear: both"></div>
+    </div>
+
+    <div class="content">
+      <h2>The Apache Stanbol Stanford NLP Integration</h2>
+      <div style="clear: both"></div>
+
+<p>This Server provides in integration for<a href="http://nlp.stanford.edu/">
+Stanford NLP</a> with the Apache Stanbol Enhancer NLP module.
+</p><p>Stanford NLP is used for Sentence detection, Tokenizing and Part of Speech, 
+Named Entiy Recognition and Lemmatization of texts. Supported languages do depend
+on the configuration of the Server. But in principle all languages supported by
+Stanford NLP can also be supported by this integration.
+</p>
+
+<p>This Server supports the following RESTful APIs:</p>
+<dl>
+
+    parsed content</dd>
+    <dt><a href="/analysis">/analysis</a><dt>
+    <dd>Service that uses Stanford NLP to analyse üparsed texts and returns NLP
+    processing results as JSON serialised AnalysedText content part.</dd>
+    <dt><code>/langidnet</code><dt>
+    <dd>NOTE: This server does NOT support language identification!</dd>
+
+</dl>
+    </div>
+
+    <div class="footer">
+
+    <div class="column">
+      <a href="http://stanbol.apache.org"><img
+        height="60px" src="/static/stanbol-2010-12-14.png"/></a>
+      <a href="http://www.srfg.at"><img height="40px" alt="Salzburg Research" 
+        src="/static/salzburg_research_logo.png" /></a>
+      <a href="http://nlp.stanford.edu"><img height="60px" alt="Stanford NLP" 
+        src="/static/stanford_nlp_logo.png" /></a>
+    </div>
+    <div class="column right">
+      <em>Work on this Software was supported by 
+      <a href="http://www.salzburgresearch.at/">Salzburg Research</a>. 
+      <br/> The <a href="https://github.com/westei/stanbol-stanfordnlp">
+      Project Home</a> can be found on Github</em>
+    </div>
+    <div style="clear: both"></div>
+    </div>
+  </body>
+</html>
