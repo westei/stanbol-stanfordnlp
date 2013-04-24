@@ -82,6 +82,19 @@
         <artifactId>at.salzburgresearch.stanbol.stanbol.enhancer.nlp.stanford.core</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
+      
+      <!-- Included Stanford NLP models -->
+      <dependency> <!-- tokenizer models -->
+        <groupId>edu.stanford.nlp</groupId>
+        <artifactId>stanford-parser</artifactId>
+        <classifier>models</classifier>
+      </dependency>
+      <dependency> <!-- english POS, NER, ... -->
+        <groupId>edu.stanford.nlp</groupId>
+        <artifactId>stanford-corenlp</artifactId>
+        <classifier>models</classifier>
+      </dependency>
+      
       <dependency>
         <groupId>org.apache.stanbol</groupId>
         <artifactId>org.apache.stanbol.enhancer.nlp</artifactId>

@@ -51,7 +51,14 @@
         <version>${stanford-corenlp-version}</version>
         <classifier>models</classifier>
       </dependency>
-
+      <dependency>
+        <groupId>edu.stanford.nlp</groupId>
+        <artifactId>stanford-parser</artifactId>
+        <version>${stanford-parser-version}</version>
+        <classifier>models</classifier>
+      </dependency>
+      
+      
       <dependency>
         <groupId>org.apache.stanbol</groupId>
         <artifactId>org.apache.stanbol.enhancer.nlp</artifactId>
