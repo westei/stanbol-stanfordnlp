@@ -3,6 +3,7 @@ package at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.MORPHO_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.NER_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
+import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.DEPENDENCY_ANNOTATION;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,13 +13,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.stanbol.enhancer.nlp.dependency.DependencyRelation;
+import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedTextFactory;
 import org.apache.stanbol.enhancer.nlp.model.Chunk;
+import org.apache.stanbol.enhancer.nlp.model.Span;
 import org.apache.stanbol.enhancer.nlp.model.Token;
 import org.apache.stanbol.enhancer.nlp.model.annotation.Value;
 import org.apache.stanbol.enhancer.nlp.model.tag.TagSet;
@@ -38,6 +41,9 @@ import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.AnnotationPipeline;
+import edu.stanford.nlp.trees.GrammaticalRelation;
+import edu.stanford.nlp.trees.TreeGraphNode;
+import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 
 public class StanfordNlpAnalyzer {
@@ -51,6 +57,12 @@ public class StanfordNlpAnalyzer {
 
     private final Map<String,AnnotationPipeline> pipelines = new HashMap<String,AnnotationPipeline>();
     private Collection<String> supported = Collections.emptyList();
+    
+    /**
+     * Map of {@link DependencyTreeParser}s by language
+     */
+    private Map<String, DependencyTreeParser> dependencyTreeParsers = 
+        new HashMap<String, DependencyTreeParser>();
     
     public StanfordNlpAnalyzer(ExecutorService executor, AnalysedTextFactory atf) {
         this.executor = executor;
@@ -78,6 +90,25 @@ public class StanfordNlpAnalyzer {
         } //language was already present ... no need to update supported
         return old;
     }
+    
+    /**
+     * Sets the {@link DependencyTreeParser} for a language
+     * @param parser
+     */
+    public void setDependencyTreeParser(DependencyTreeParser parser) {
+        if(parser == null) {
+            return;
+        }
+        
+        String language = parser.getLanguage();
+        
+        if(language == null || language.isEmpty()) {
+            throw new IllegalArgumentException("The parsed language MUST NOT be NULL nor empty!");
+        }
+        
+        dependencyTreeParsers.put(language, parser);
+    }
+    
     /**
      * Checks if the parsed language is supported by this Analyzer
      * @param language the language
@@ -111,25 +142,21 @@ public class StanfordNlpAnalyzer {
             throw new IllegalArgumentException("The parsed language '" + lang
                 + "'is not supported (supported: " + supported+ ")!");
         }
+        
+        final DependencyTreeParser dtParser = dependencyTreeParsers.get(lang);
+        
         // create an empty Annotation just with the given text
         final AnalysedText at = analysedTextFactory.createAnalysedText(blob);
         TagSet<PosTag> posTagSet = tagSetRegistry.getPosTagSet(lang);
         Map<String,PosTag> adhocPosTags = tagSetRegistry.getAdhocPosTagMap(lang);
         TagSet<NerTag> nerTagSet = tagSetRegistry.getNerTagSet(lang);
+        TagSet<GrammaticalRelationTag> gramRelationTagSet = 
+            tagSetRegistry.getGrammaticalRelationTagSet(lang);
 
-        // run all Annotators on this text
-        Annotation document;
+        // run all Annotators and dependency tree parser on this text
+        ParsedData parsedData;
         try { //process the text using the executor service
-            document = executor.submit(new Callable<Annotation>() {
-
-                @Override
-                public Annotation call() throws Exception {
-                    Annotation document = new Annotation(at.getSpan());
-                    pipeline.annotate(document);
-                    return document;
-                }
-                
-            }).get(); //and wait for the results
+            parsedData = executor.submit(new ParserCallable(at, pipeline, dtParser)).get(); //and wait for the results
         } catch (InterruptedException e) {
             throw new IllegalStateException("Interupped while processing text",e);
         } catch (ExecutionException e) {
@@ -141,7 +168,9 @@ public class StanfordNlpAnalyzer {
 
         // these are all the sentences in this document
         // a CoreMap is essentially a Map that uses class objects as keys and has values with custom types
+        Annotation document = parsedData.getAnnotation();
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+        int sentenceCount = 0;
         
         for (CoreMap sentence : sentences) {
             // traversing the words in the current sentence
@@ -151,8 +180,13 @@ public class StanfordNlpAnalyzer {
             Token nerStart = null;
             Token nerEnd = null;
             NerTag nerTag = null;
+            int tokenCount = 0;
             
-            for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+            List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
+            Map<Integer, Collection<TypedDependency>> sentenceDependencies = 
+                parsedData.getTypedDependencies(++sentenceCount);
+            
+            for (CoreLabel token : tokens) {
                 Token t = at.addToken(token.beginPosition(), token.endPosition());
                 // This can be used to ensure that the text indexes are correct
 //              String word = token.get(OriginalTextAnnotation.class);
@@ -211,6 +245,13 @@ public class StanfordNlpAnalyzer {
                     }
                     t.addAnnotation(MORPHO_ANNOTATION, Value.value(morpho));
                 }
+                
+                // Add dependency tree annotations
+                if (sentenceDependencies != null) {
+                    addDependencyRelations(tokens, ++tokenCount, 
+                        sentenceDependencies.get(tokenCount), at, gramRelationTagSet, t);
+                }  
+
             } //end iterate over tokens in sentence
             //clean up sentence
             at.addSentence(sentStart.getStart(), sentEnd.getEnd());
@@ -233,4 +274,57 @@ public class StanfordNlpAnalyzer {
         return at;
     }
 
+    /**
+     * Adds dependency relations to the current token
+     * 
+     * @param tokens
+     * @param tokenIdxInSentence - idx for the token which is currently processed
+     * @param sentenceDependencies
+     * @param at
+     * @param relationTagSet
+     * @param currentToken
+     */
+    private void addDependencyRelations(List<CoreLabel> tokens,
+            int tokenIdxInSentence,
+            Collection<TypedDependency> sentenceDependencies, AnalysedText at,
+            TagSet<GrammaticalRelationTag> relationTagSet, Token currentToken) {
+
+        if (sentenceDependencies == null) {
+            return;
+        }
+        
+        for (TypedDependency dependency : sentenceDependencies) {
+            TreeGraphNode dependent = dependency.dep();
+            TreeGraphNode governor = dependency.gov();
+            int dependentIndex = dependent.label().index();
+            int governorIndex = governor.label().index();
+            GrammaticalRelation gramRel = dependency.reln();
+            GrammaticalRelationTag relTag = relationTagSet.getTag(gramRel.getShortName());
+            
+            boolean isDependent = false;
+            Span partner = null;
+            
+            if (governorIndex == tokenIdxInSentence) {
+                CoreLabel dependentLabel = tokens.get(dependentIndex - 1);
+                Token dependentToken = at.addToken(dependentLabel.beginPosition(),
+                    dependentLabel.endPosition());
+                partner = dependentToken;
+            } else if (dependentIndex == tokenIdxInSentence) {
+                isDependent = true;
+                
+                if (governorIndex != 0) {
+                    CoreLabel governorLabel = tokens.get(governorIndex - 1);
+                    Token governorToken = at.addToken(governorLabel.beginPosition(),
+                        governorLabel.endPosition());
+                    partner = governorToken;
+                }
+            } else {
+                // We should not be in this situation but just in case
+                continue;
+            }
+            
+            currentToken.addAnnotation(DEPENDENCY_ANNOTATION, 
+                Value.value(new DependencyRelation(relTag, isDependent, partner)));
+        }
+    }
 }

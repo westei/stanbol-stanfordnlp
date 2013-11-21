@@ -32,8 +32,10 @@ import org.mortbay.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.DependencyTreeParser;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.LangPipeline;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.StanfordNlpAnalyzer;
+import at.salzburgresearch.stanbol.enhancer.nlp.stanford.impl.DependencyTreeParserFactory;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.web.Constants;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.web.StanfordNlpApplication;
 
@@ -99,6 +101,10 @@ public class Main {
         for(File configFile : configFiles){
             LangPipeline pipeline = new LangPipeline(configFile.getAbsolutePath());
             analyzer.setPipeline(pipeline.getLanguage(), pipeline);
+            
+            DependencyTreeParser dependencyTreeParser = 
+                DependencyTreeParserFactory.getDependencyTreeParser(configFile.getAbsolutePath());
+            analyzer.setDependencyTreeParser(dependencyTreeParser);
         }
         
         //init the Jetty Server
