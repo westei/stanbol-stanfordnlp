@@ -20,12 +20,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.clerezza.rdf.core.UriRef;
+import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelation;
+import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.tag.TagSet;
 import org.apache.stanbol.enhancer.nlp.ner.NerTag;
 import org.apache.stanbol.enhancer.nlp.pos.LexicalCategory;
 import org.apache.stanbol.enhancer.nlp.pos.Pos;
 import org.apache.stanbol.enhancer.nlp.pos.PosTag;
-import org.apache.stanbol.enhancer.nlp.pos.olia.English;
 import org.apache.stanbol.enhancer.servicesapi.rdf.OntologicalClasses;
 
 public class TagSetRegistry {
@@ -41,6 +42,9 @@ public class TagSetRegistry {
     private Map<String,Map<String,PosTag>> adhocPosTagMap = new HashMap<String,Map<String,PosTag>>();
     
     private final Map<String,TagSet<NerTag>> nerModels = new HashMap<String,TagSet<NerTag>>();
+    
+    private final Map<String, TagSet<GrammaticalRelationTag>> gramRelationModels = 
+        new HashMap<String, TagSet<GrammaticalRelationTag>>();
     
     public static TagSetRegistry getInstance(){
         return instance;
@@ -65,6 +69,16 @@ public class TagSetRegistry {
         }
     }
 
+     private void addDependencyTreeTagSet(TagSet<GrammaticalRelationTag> model) {
+         for(String lang : model.getLanguages()) {
+             if(gramRelationModels.put(lang, model) != null) {
+                 throw new IllegalStateException("Multiple Dependency Models for Language '"
+                     + lang+"'! This is an error in the static configuration of "
+                     + "this class!");
+             }
+         }
+     }
+         
     /**
      * Getter for the {@link PosTag} {@link TagSet} by language. If no {@link TagSet}
      * is available for an Language this will return <code>null</code>
@@ -98,6 +112,16 @@ public class TagSetRegistry {
         return adhocMap;
     }
 
+     /**
+      * Getter for the {@link GrammaticalRelationTag} {@link TagSet} by language. If no {@link TagSet}
+      * is available for an Language this will return <code>null</code>
+      * @param language the language
+      * @return the AnnotationModel or <code>null</code> if non is defined
+      */
+     public TagSet<GrammaticalRelationTag> getGrammaticalRelationTagSet(String language) {
+         return gramRelationModels.get(language);
+     }
+     
     /*
      * POS TagSet definitions
      */
@@ -189,4 +213,68 @@ public class TagSetRegistry {
         getInstance().addNerTagSet(nerTags);
     }
     
+    /*
+     * Dependency Tree TagSet definitions
+     */
+    static {
+        //the default TagSet for the grammatical relation tags used for English
+        TagSet<GrammaticalRelationTag> gramRelationTags = 
+            new TagSet<GrammaticalRelationTag>("Default Stanford NLP Dependency Tree Tagset", "en");
+        
+        gramRelationTags.addTag(new GrammaticalRelationTag("abbrev", GrammaticalRelation.AbbreviationModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("acomp", GrammaticalRelation.AdjectivalComplement));
+        gramRelationTags.addTag(new GrammaticalRelationTag("amod", GrammaticalRelation.AdjectivalModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("advcl", GrammaticalRelation.AdverbialClauseModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("advmod", GrammaticalRelation.AdverbialModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("agent", GrammaticalRelation.Agent));
+        gramRelationTags.addTag(new GrammaticalRelationTag("appos", GrammaticalRelation.AppositionalModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("attr", GrammaticalRelation.Attributive));
+        gramRelationTags.addTag(new GrammaticalRelationTag("aux", GrammaticalRelation.Auxiliary));
+        gramRelationTags.addTag(new GrammaticalRelationTag("xcomp", GrammaticalRelation.ClausalComplementWithExternalSubject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("ccomp", GrammaticalRelation.ClausalComplementWithInternalSubject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("csubj", GrammaticalRelation.ClausalSubject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("complm", GrammaticalRelation.Complementizer));
+        gramRelationTags.addTag(new GrammaticalRelationTag("number", GrammaticalRelation.CompountNumberElement));
+        gramRelationTags.addTag(new GrammaticalRelationTag("conj", GrammaticalRelation.Conjunct));
+        gramRelationTags.addTag(new GrammaticalRelationTag("xsubj", GrammaticalRelation.ControllingSubject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("cc", GrammaticalRelation.Coordination));
+        gramRelationTags.addTag(new GrammaticalRelationTag("cop", GrammaticalRelation.Copula));
+        gramRelationTags.addTag(new GrammaticalRelationTag("dep", GrammaticalRelation.Dependent));
+        gramRelationTags.addTag(new GrammaticalRelationTag("det", GrammaticalRelation.Determiner));
+        gramRelationTags.addTag(new GrammaticalRelationTag("dobj", GrammaticalRelation.DirectObject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("expl", GrammaticalRelation.Expletive));
+        gramRelationTags.addTag(new GrammaticalRelationTag("iobj", GrammaticalRelation.IndirectObject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("infmod", GrammaticalRelation.InfinitivalModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("mark", GrammaticalRelation.Marker));
+        gramRelationTags.addTag(new GrammaticalRelationTag("mwe", GrammaticalRelation.MultiWordExpression));
+        gramRelationTags.addTag(new GrammaticalRelationTag("neg", GrammaticalRelation.NegationModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("nsubj", GrammaticalRelation.NominalSubject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("nn", GrammaticalRelation.NounCompoundModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("npadvmod", GrammaticalRelation.NounPhraseAsAdverbialModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("num", GrammaticalRelation.NumericModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("pobj", GrammaticalRelation.ObjectOfPreposition));
+        gramRelationTags.addTag(new GrammaticalRelationTag("parataxis", GrammaticalRelation.Parataxis));
+        gramRelationTags.addTag(new GrammaticalRelationTag("partmod", GrammaticalRelation.ParticipalModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("auxpass", GrammaticalRelation.PassiveAuxiliary));
+        gramRelationTags.addTag(new GrammaticalRelationTag("csubjpass", GrammaticalRelation.PassiveClausalSubject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("nsubjpass", GrammaticalRelation.PassiveNominalSubject));
+        gramRelationTags.addTag(new GrammaticalRelationTag("prt", GrammaticalRelation.PhrasalVerbParticle));
+        gramRelationTags.addTag(new GrammaticalRelationTag("poss", GrammaticalRelation.PossessionModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("possessive", GrammaticalRelation.PossessiveModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("preconj", GrammaticalRelation.Preconjunct));
+        gramRelationTags.addTag(new GrammaticalRelationTag("predet", GrammaticalRelation.Predeterminer));
+        gramRelationTags.addTag(new GrammaticalRelationTag("prepc", GrammaticalRelation.PrepositionalClausalModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("pcomp", GrammaticalRelation.PrepositionalComplement));
+        gramRelationTags.addTag(new GrammaticalRelationTag("prep", GrammaticalRelation.PrepositionalModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("punct", GrammaticalRelation.Punctuation));
+        gramRelationTags.addTag(new GrammaticalRelationTag("purpcl", GrammaticalRelation.PurposeClauseModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("quantmod", GrammaticalRelation.QuantifierModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("ref", GrammaticalRelation.Referent));
+        gramRelationTags.addTag(new GrammaticalRelationTag("rel", GrammaticalRelation.Relative));
+        gramRelationTags.addTag(new GrammaticalRelationTag("rcmod", GrammaticalRelation.RelativeClauseModifier));
+        gramRelationTags.addTag(new GrammaticalRelationTag("root", GrammaticalRelation.Root));
+        gramRelationTags.addTag(new GrammaticalRelationTag("tmod", GrammaticalRelation.TemporalModifier));
+        
+        getInstance().addDependencyTreeTagSet(gramRelationTags);
+    }
 }

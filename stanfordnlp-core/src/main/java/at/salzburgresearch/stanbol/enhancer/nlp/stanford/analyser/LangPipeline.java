@@ -1,25 +1,26 @@
 package at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser;
 
-import static edu.stanford.nlp.pipeline.StanfordCoreNLP.*;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.NEWLINE_SPLITTER_PROPERTY;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.STANFORD_LEMMA;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.STANFORD_NER;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.STANFORD_PARSE;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.STANFORD_POS;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.STANFORD_REGEXNER;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.STANFORD_SSPLIT;
+import static edu.stanford.nlp.pipeline.StanfordCoreNLP.STANFORD_TOKENIZE;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import at.salzburgresearch.stanbol.enhancer.nlp.stanford.utils.ConfigUtils;
 import edu.stanford.nlp.ie.NERClassifierCombiner;
 import edu.stanford.nlp.ie.regexp.NumberSequenceClassifier;
 import edu.stanford.nlp.ie.regexp.RegexNERSequenceClassifier;
@@ -39,7 +40,6 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.pipeline.WhitespaceTokenizerAnnotator;
 import edu.stanford.nlp.pipeline.WordsToSentencesAnnotator;
 import edu.stanford.nlp.process.PTBTokenizer;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
@@ -400,38 +400,9 @@ public class LangPipeline extends AnnotationPipeline {
         } else {
             log.info("Init Annotation Pipeline for Language {} (config: {})", language, config);
         }
-        Properties properties = new Properties(LanguageDefaults.getInstance().getDefaults(language));
-        File configFile = new File(FilenameUtils.separatorsToSystem(config));
-        if(configFile.isFile()){
-            InputStream in = null;
-            try {
-                in = new FileInputStream(configFile);
-                log.info("   ... from File {}", configFile.getAbsolutePath());
-                properties.load(in);
-            } catch (IOException e) {
-                throw new IllegalStateException("Unable to load properties for language '"
-                    + language + "form file '"+configFile.getAbsolutePath()+"'!",e);
-            } finally {
-                IOUtils.closeQuietly(in);
-            }
-        } else { //load via classpath
-            String configResource = FilenameUtils.separatorsToUnix(config);
-            InputStream in = LangPipeline.class.getClassLoader().getResourceAsStream(configResource);
-            if(in == null){
-                throw new IllegalArgumentException("Unable to load parsed config '"
-                    +config+"' from the file System or from the Classpath!");
-            } else {
-                log.info("   ... via Classpath Resource: {}", configFile.getAbsolutePath());
-                try {
-                    properties.load(in);
-                } catch (IOException e) {
-                    throw new IllegalStateException("Unable to load properties for language '"
-                        + language + "form file '"+configFile.getAbsolutePath()+"'!",e);
-                } finally {
-                    IOUtils.closeQuietly(in);
-                }
-            }
-        }
+        
+        Properties properties = ConfigUtils.loadConfigProperties(config, language);
+        
         log.info("   ... successfully loaded config for language {}",language);
         //we need to init all factories
         initFactories(properties);
