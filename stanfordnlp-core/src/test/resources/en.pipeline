@@ -6,7 +6,7 @@
 # (4) Lemmatize words
 # (5) Detect Named Entities
 # 
-annotators = tokenize, ssplit, pos, lemma, ner
+annotators = tokenize, ssplit, pos, lemma, ner, parse
 
 # Optional Analyzers that could be added
 # regexner
