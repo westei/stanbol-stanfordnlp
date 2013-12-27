@@ -116,6 +116,7 @@ public class StanfordNlpAnalyzer {
         TagSet<PosTag> posTagSet = tagSetRegistry.getPosTagSet(lang);
         Map<String,PosTag> adhocPosTags = tagSetRegistry.getAdhocPosTagMap(lang);
         TagSet<NerTag> nerTagSet = tagSetRegistry.getNerTagSet(lang);
+        Map<String,NerTag> adhocNerTags = tagSetRegistry.getAdhocNerTagMap(lang);
 
         // run all Annotators on this text
         Annotation document;
@@ -153,6 +154,10 @@ public class StanfordNlpAnalyzer {
             NerTag nerTag = null;
             
             for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+                if(token.beginPosition() >= token.endPosition()){
+                    log.warn("Illegal Token start:{}/end:{} values -> ignored", token.beginPosition(), token.endPosition());
+                    continue;
+                }
                 Token t = at.addToken(token.beginPosition(), token.endPosition());
                 // This can be used to ensure that the text indexes are correct
 //              String word = token.get(OriginalTextAnnotation.class);
@@ -181,13 +186,25 @@ public class StanfordNlpAnalyzer {
                 } else {
                     posTag = null;
                 }
-                log.info(" > '{}' pos: {}",t.getSpan(),posTag);
+                log.debug(" > '{}' pos: {}",t.getSpan(),posTag);
                 // Process NER annotations
                 String ne = token.get(NamedEntityTagAnnotation.class);
                 //NOTE: '0' is used to indicate that the current token is no 
                 //      named entities
-                NerTag actNerTag = nerTagSet != null && !"O".equals(ne) ? 
-                        nerTagSet.getTag(ne) : null;
+                NerTag actNerTag;
+                if(ne != null && !"O".equals(ne)){
+                    actNerTag = nerTagSet != null ? nerTagSet.getTag(ne) : null;
+                    if(actNerTag == null){
+                        actNerTag = adhocNerTags.get(ne);
+                    }
+                    if(actNerTag == null){
+                        actNerTag = new NerTag(ne);
+                        log.info("Unmapped Ner tag '{}' for language {}",pos,lang);
+                        adhocNerTags.put(ne, actNerTag);
+                    }
+                } else {
+                    actNerTag = null;
+                }
                 if(nerTag != null && !nerTag.equals(actNerTag)){
                     Chunk nerChunk = at.addChunk(nerStart.getStart(), nerEnd.getEnd());
                     nerChunk.addAnnotation(NER_ANNOTATION, Value.value(nerTag));

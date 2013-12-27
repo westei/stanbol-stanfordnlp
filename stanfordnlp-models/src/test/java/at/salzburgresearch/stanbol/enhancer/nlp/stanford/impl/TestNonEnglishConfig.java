@@ -57,100 +57,148 @@ import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.LangPipeline;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.StanfordNlpAnalyzer;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.mappings.TagSetRegistry;
 
-public class TestStanfordNlpAnalyser {
+public class TestNonEnglishConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(TestStanfordNlpAnalyser.class);
+    private static final Logger log = LoggerFactory.getLogger(TestNonEnglishConfig.class);
     
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final int ANALYZER_THREADS = 10;
-    private static final ClassLoader cl = TestStanfordNlpAnalyser.class.getClassLoader();
+    private static final ClassLoader cl = TestNonEnglishConfig.class.getClassLoader();
     
     private static StanfordNlpAnalyzer analyzer;
     
     private static ContentItemFactory cif;
     private static ExecutorService executorService;
-    
-    private static TagSet<PosTag> TAG_SET = TagSetRegistry.getInstance().getPosTagSet("en");
-    
-    private static final Map<String, Blob> examples = new HashMap<String,Blob>();
+        
+    private static final Map<String, Blob> deExamples = new HashMap<String,Blob>();
+    private static final Map<String, Blob> frExamples = new HashMap<String,Blob>();
+    private static final Map<String, Blob> arExamples = new HashMap<String,Blob>();
+    private static final Map<String, Blob> zhExamples = new HashMap<String,Blob>();
 
-    private static final String TEST_CONFIG = "en.pipeline";
     private static final String TEST_FILE_FOLDER = "text-examples";
-    private static final List<String> TEST_FILE_NAMES = Arrays.asList("countrymention.txt",
-        "Egypt-protests_wikinews-org.txt", "jimi-hendrix.txt", "nuclear-fusion.txt", 
-        "plasma.txt", "astronomers-discover-star.txt", "china-oil-spill.txt", 
-        "obama-oil-drilling.txt", "robben-ford.txt", "australia-debate.txt",
-        "mitchell-bio.txt", "obama-signing.txt", "robbie-williams.txt",
-        "hillary-clinton.txt", "mitchell-joy-in-town.txt", "obama-tsa.txt",
-        "singapore-police.txt", "indian-train-crash.txt", "michael-jackson.txt",
-        "mitchell-safaris.txt", "obama.txt", "turkish-internet.txt",
-        "coalition-australia.txt");
+//    private static final String DE_TEST_CONFIG = "de.pipeline";
+//    private static final List<String> DE_TEST_FILE_NAMES = Arrays.asList(
+//        "TODO.txt");
+    private static final String FR_TEST_CONFIG = "fr.pipeline";
+    private static final List<String> FR_TEST_FILE_NAMES = Arrays.asList(
+        "mali_vote_france.txt");
+    private static final String AR_TEST_CONFIG = "ar.pipeline";
+    private static final List<String> AR_TEST_FILE_NAMES = Arrays.asList(
+        "gaza_hamas_killing.txt");
+    private static final String ZH_TEST_CONFIG = "zh.pipeline";
+    private static final List<String> ZH_TEST_FILE_NAMES = Arrays.asList(
+        "liushihui_beaten_linzhao.txt");
+
+    
+    private static final TagSetRegistry tagSetRegistry = TagSetRegistry.getInstance();
     
     @BeforeClass
     public static void initStanfordNlpPipeline() throws Exception {
         executorService = Executors.newFixedThreadPool(ANALYZER_THREADS);
         analyzer = new StanfordNlpAnalyzer(executorService, null);
-        Assert.assertNotNull("Unable to find test configuration '"+TEST_CONFIG+"'!", 
-            TestStanfordNlpAnalyser.class.getClassLoader().getResource(TEST_CONFIG));
-        LangPipeline pipeline = new LangPipeline(TEST_CONFIG);
+//        Assert.assertNotNull("Unable to find test configuration '"+DE_TEST_CONFIG+"'!", 
+//            TestNonEnglishConfig.class.getClassLoader().getResource(DE_TEST_CONFIG));
+//        LangPipeline pipeline = new LangPipeline(DE_TEST_CONFIG);
+//        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
+        LangPipeline pipeline = new LangPipeline(FR_TEST_CONFIG);
+        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
+        pipeline = new LangPipeline(AR_TEST_CONFIG);
+        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
+        pipeline = new LangPipeline(ZH_TEST_CONFIG);
         analyzer.setPipeline(pipeline.getLanguage(), pipeline);
         cif = InMemoryContentItemFactory.getInstance();
         //init the text eamples
-        for(String name : TEST_FILE_NAMES){
-            String file = TEST_FILE_FOLDER+'/'+name;
-            examples.put(name, cif.createBlob(new StreamSource(
+//        for(String name : DE_TEST_FILE_NAMES){
+//            String file = TEST_FILE_FOLDER+"/de/"+name;
+//            deExamples.put(name, cif.createBlob(new StreamSource(
+//                cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
+//        }
+        for(String name : FR_TEST_FILE_NAMES){
+            String file = TEST_FILE_FOLDER+"/fr/"+name;
+            frExamples.put(name, cif.createBlob(new StreamSource(
+                cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
+        }
+        for(String name : AR_TEST_FILE_NAMES){
+            String file = TEST_FILE_FOLDER+"/ar/"+name;
+            arExamples.put(name, cif.createBlob(new StreamSource(
+                cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
+        }
+        for(String name : ZH_TEST_FILE_NAMES){
+            String file = TEST_FILE_FOLDER+"/zh/"+name;
+            zhExamples.put(name, cif.createBlob(new StreamSource(
                 cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
         }
     }
 
 
     @Test
-    public void testAnalysis() throws IOException {
-        for(Entry<String,Blob> example : examples.entrySet()){
-            AnalysedText at = analyzer.analyse("en",example.getValue());
-            validateAnalysedText(at.getSpan(), at);
+    public void testDeAnalysis() throws IOException {
+        for(Entry<String,Blob> example : deExamples.entrySet()){
+            AnalysedText at = analyzer.analyse("de",example.getValue());
+            validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("de"));
         }
 	}
-
     @Test
-    public void testConcurrentAnalyses() throws IOException, InterruptedException, ExecutionException{
-        //warm up
-        log.info("Start concurrent analyses test");
-        log.info("  ... warm up");
-        for(Entry<String,Blob> example : examples.entrySet()){
-            analyzer.analyse("en",example.getValue());
+    public void testFrAnalysis() throws IOException {
+        for(Entry<String,Blob> example : frExamples.entrySet()){
+            AnalysedText at = analyzer.analyse("fr",example.getValue());
+            validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("fr"));
         }
-
-        //performance test
-        long start = System.currentTimeMillis();
-        int concurrentRequests = 3;
-        ExecutorService executor = Executors.newFixedThreadPool(concurrentRequests);
-        int iterations = 100;
-        log.info("  ... start test with {} iterations", iterations);
-        List<Future<?>> tasks = new ArrayList<Future<?>>(iterations);
-        long[] times = new long[iterations];
-        Iterator<Blob> texts = examples.values().iterator();
-        for(int i=0; i < iterations;i++){
-            if(!texts.hasNext()){
-                texts = examples.values().iterator();
-            }
-            tasks.add(executor.submit(new AnalyzerRequest(i, times, analyzer, texts.next())));
-        }
-        for(Future<?> task : tasks){ //wait for completion of all tasks
-            task.get();
-        }
-        long duration = System.currentTimeMillis()-start;
-        log.info("Processed {} texts",iterations);
-        log.info("  > time       : {}ms",duration);
-        log.info("  > average    : {}ms",(duration)/(double)iterations);
-        long sumTime = 0;
-        for(int i=0;i<times.length;i++){
-            sumTime = sumTime+times[i];
-        }
-        log.info("  > processing : {}ms",sumTime);
-        float concurrency = sumTime/(float)duration;
-        log.info("  > concurrency: {} / {}%",concurrency, concurrency*100/concurrentRequests);
     }
+    @Test
+    public void testArAnalysis() throws IOException {
+        for(Entry<String,Blob> example : arExamples.entrySet()){
+            AnalysedText at = analyzer.analyse("ar",example.getValue());
+            validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("ar"));
+        }
+    }
+    @Test
+    public void testZhAnalysis() throws IOException {
+        for(Entry<String,Blob> example : zhExamples.entrySet()){
+            AnalysedText at = analyzer.analyse("zh",example.getValue());
+            validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("zh"));
+        }
+    }
+
+//    @Test
+//    public void testConcurrentAnalyses() throws IOException, InterruptedException, ExecutionException{
+//        //warm up
+//        log.info("Start concurrent analyses test");
+//        log.info("  ... warm up");
+//        for(Entry<String,Blob> example : examples.entrySet()){
+//            analyzer.analyse("en",example.getValue());
+//        }
+//
+//        //performance test
+//        long start = System.currentTimeMillis();
+//        int concurrentRequests = 3;
+//        ExecutorService executor = Executors.newFixedThreadPool(concurrentRequests);
+//        int iterations = 100;
+//        log.info("  ... start test with {} iterations", iterations);
+//        List<Future<?>> tasks = new ArrayList<Future<?>>(iterations);
+//        long[] times = new long[iterations];
+//        Iterator<Blob> texts = examples.values().iterator();
+//        for(int i=0; i < iterations;i++){
+//            if(!texts.hasNext()){
+//                texts = examples.values().iterator();
+//            }
+//            tasks.add(executor.submit(new AnalyzerRequest(i, times, analyzer, texts.next())));
+//        }
+//        for(Future<?> task : tasks){ //wait for completion of all tasks
+//            task.get();
+//        }
+//        long duration = System.currentTimeMillis()-start;
+//        log.info("Processed {} texts",iterations);
+//        log.info("  > time       : {}ms",duration);
+//        log.info("  > average    : {}ms",(duration)/(double)iterations);
+//        long sumTime = 0;
+//        for(int i=0;i<times.length;i++){
+//            sumTime = sumTime+times[i];
+//        }
+//        log.info("  > processing : {}ms",sumTime);
+//        float concurrency = sumTime/(float)duration;
+//        log.info("  > concurrency: {} / {}%",concurrency, concurrency*100/concurrentRequests);
+//    }
     
     private class AnalyzerRequest implements Runnable {
 
@@ -181,7 +229,7 @@ public class TestStanfordNlpAnalyser {
     }
     
     
-    private void validateAnalysedText(String text, AnalysedText at){
+    private void validateAnalysedText(String text, AnalysedText at, TagSet<PosTag> tagset){
         Assert.assertNotNull(text);
         Assert.assertNotNull(at);
         //Assert the AnalysedText
@@ -203,7 +251,7 @@ public class TestStanfordNlpAnalyser {
                     for(Value<PosTag> posTag : posTags){
                         //assert Mapped PosTags
                         Assert.assertTrue("PosTag "+posTag+" used by "+span+" is not present in the PosTagSet",
-                            TAG_SET.getTag(posTag.value().getTag()) != null);
+                            tagset.getTag(posTag.value().getTag()) != null);
                         //assert declining probabilities
                         Assert.assertTrue("Wrong order in "+posTags+" of "+span+"!",
                             prevProb < 0 || posTag.probability() <= prevProb);

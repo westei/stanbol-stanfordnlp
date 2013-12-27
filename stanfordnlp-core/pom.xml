@@ -59,6 +59,12 @@
     </dependency>
     
     <!-- Stanford NLP -->
+    <!-- provides segmentation support for Chinese and Arabic -->
+    <dependency> 
+      <groupId>at.salzburgresearch.stanbol</groupId>
+      <artifactId>at.salzburgresearch.stanbol.stanbol.enhancer.nlp.stanford.segment</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>edu.stanford.nlp</groupId>
       <artifactId>stanford-parser</artifactId>
@@ -72,11 +78,24 @@
       <artifactId>joda-time</artifactId>
     </dependency>
 
+    <!-- General Purpose -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
 	<!-- Testing -->
     <dependency>
       <groupId>edu.stanford.nlp</groupId>
       <artifactId>stanford-corenlp</artifactId>
       <classifier>models</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>edu.stanford.nlp</groupId>
+      <artifactId>stanford-parser</artifactId>
+      <classifier>models</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,6 +21,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import at.salzburgresearch.enhancer.nlp.stanford.segment.ArabicSegmentorAnnotator;
+
 import edu.stanford.nlp.ie.NERClassifierCombiner;
 import edu.stanford.nlp.ie.regexp.NumberSequenceClassifier;
 import edu.stanford.nlp.ie.regexp.RegexNERSequenceClassifier;
@@ -28,6 +31,7 @@ import edu.stanford.nlp.pipeline.Annotator;
 import edu.stanford.nlp.pipeline.AnnotatorFactory;
 import edu.stanford.nlp.pipeline.AnnotatorPool;
 import edu.stanford.nlp.pipeline.CharniakParserAnnotator;
+import edu.stanford.nlp.pipeline.ChineseSegmenterAnnotator;
 import edu.stanford.nlp.pipeline.DefaultPaths;
 import edu.stanford.nlp.pipeline.MorphaAnnotator;
 import edu.stanford.nlp.pipeline.NERCombinerAnnotator;
@@ -58,6 +62,8 @@ import edu.stanford.nlp.util.PropertiesUtils;
  */
 public class LangPipeline extends AnnotationPipeline {
 
+    private static final String STANFORD_SEGMENT = "segment";
+
     private final Logger log = LoggerFactory.getLogger(LangPipeline.class);
     
     /**
@@ -65,6 +71,42 @@ public class LangPipeline extends AnnotationPipeline {
      * constructor. 
      */
     protected static final Properties DUMMY_PROPERTIES = new Properties();
+    
+    private class SegmentorFactory extends AnnotatorFactory {
+        
+        private static final long serialVersionUID = 1L;
+        
+        /**
+         * the properties.<p>
+         * <b>NOTE:</b> Con not use protected field in super class, because is
+         * copies the parsed properties and therefore looses the defaults (parent
+         * properties)
+         */
+        private final Properties properties;
+
+        public SegmentorFactory(Properties properties) {
+            super(DUMMY_PROPERTIES); //Not used
+            this.properties = properties;
+        }
+
+        @Override
+        public Annotator create() {
+            if(language.startsWith("zh")){
+                return new ChineseSegmenterAnnotator(STANFORD_SEGMENT, properties);
+            } else if(language.startsWith("ar")){
+                return new ArabicSegmentorAnnotator(STANFORD_SEGMENT, properties);
+            } else {
+                throw new IllegalStateException("Segmentor Factory only supports Chinese (zh) "
+                    + "and Arabic (ar) but current language is '"+language+"'!");
+            }
+        }
+
+        @Override
+        public String signature() {
+            return ""; //not used
+        }
+
+    }
     
     private class TokenizerFactory extends AnnotatorFactory {
 
@@ -459,6 +501,7 @@ public class LangPipeline extends AnnotationPipeline {
      * @param properties
      */
     private void initPipeline(Properties properties) {
+        log.info("reading annotation pipeline {}",properties.getProperty("annotators"));
         for(String name : properties.getProperty("annotators","").split("[, \t]+")){
             Annotator annotator = pool.get(name.trim());
             if(annotator == null){
@@ -480,6 +523,7 @@ public class LangPipeline extends AnnotationPipeline {
         pool.register(STANFORD_NER, new NerFactory(properties));
         pool.register(STANFORD_REGEXNER, new RegexNerFactory(properties));
         pool.register(STANFORD_LEMMA, new LemmatizerFactory(properties));
+        pool.register(STANFORD_SEGMENT, new SegmentorFactory(properties));
     }
 
     public String getLanguage() {
