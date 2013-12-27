@@ -65,7 +65,7 @@ public class TestStanfordNlpAnalyser {
     private static final Logger log = LoggerFactory.getLogger(TestStanfordNlpAnalyser.class);
     
     private static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final int ANALYZER_THREADS = 10;
+    private static final int ANALYZER_THREADS = 8;
     private static final ClassLoader cl = TestStanfordNlpAnalyser.class.getClassLoader();
     
     private static StanfordNlpAnalyzer analyzer;
@@ -128,7 +128,7 @@ public class TestStanfordNlpAnalyser {
 
         //performance test
         long start = System.currentTimeMillis();
-        int concurrentRequests = 3;
+        int concurrentRequests = ANALYZER_THREADS;
         ExecutorService executor = Executors.newFixedThreadPool(concurrentRequests);
         int iterations = 100;
         log.info("  ... start test with {} iterations", iterations);

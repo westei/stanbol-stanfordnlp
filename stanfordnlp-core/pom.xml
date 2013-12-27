@@ -17,13 +17,13 @@
 	<parent>
 		<groupId>at.salzburgresearch.stanbol</groupId>
 		<artifactId>stanbol-stanfordnlp-parent</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 
 	<artifactId>at.salzburgresearch.stanbol.stanbol.enhancer.nlp.stanford.core
 	</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>Apache Stanbol Stanford NLP integration Core</name>

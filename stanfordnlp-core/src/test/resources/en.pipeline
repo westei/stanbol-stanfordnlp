@@ -5,6 +5,7 @@
 # (3) POS tags sentences
 # (4) Lemmatize words
 # (5) Detect Named Entities
+# (6) Parse Tree
 # 
 annotators = tokenize, ssplit, pos, lemma, ner, parse
 

@@ -196,7 +196,7 @@ public class StanfordNlpAnalyzer {
                 } else {
                     posTag = null;
                 }
-                log.info(" > '{}' pos: {}",t.getSpan(),posTag);
+                log.debug(" > '{}' pos: {}",t.getSpan(),posTag);
                 // Process NER annotations
                 String ne = token.get(NamedEntityTagAnnotation.class);
                 //NOTE: '0' is used to indicate that the current token is no 
