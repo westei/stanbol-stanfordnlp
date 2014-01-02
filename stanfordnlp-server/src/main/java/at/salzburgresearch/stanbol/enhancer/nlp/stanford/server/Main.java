@@ -125,11 +125,14 @@ public class Main {
         
         log.info(" ... starting server");
         server.start();
+        log.info(" ... server started");
+        System.out.println(" ... server started");
         try {
             server.join();
         }catch (InterruptedException e) {
         }
-        log.info("Shutting down Talismane");
+        log.info(" ... shutting down");
+      System.out.println(" ... shutting down");
         executor.shutdown();
     }
 
