@@ -19,6 +19,7 @@ package at.salzburgresearch.stanbol.enhancer.nlp.stanford.impl;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.NER_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.PHRASE_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
+import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.DEPENDENCY_ANNOTATION;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -36,9 +37,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.stanbol.enhancer.contentitem.inmemory.InMemoryContentItemFactory;
+import org.apache.stanbol.enhancer.nlp.dependency.DependencyRelation;
+import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
 import org.apache.stanbol.enhancer.nlp.model.Span;
-import org.apache.stanbol.enhancer.nlp.model.Span.SpanTypeEnum;
+import org.apache.stanbol.enhancer.nlp.model.SpanTypeEnum;
 import org.apache.stanbol.enhancer.nlp.model.annotation.Value;
 import org.apache.stanbol.enhancer.nlp.model.tag.TagSet;
 import org.apache.stanbol.enhancer.nlp.ner.NerTag;
@@ -62,7 +65,7 @@ public class TestStanfordNlpAnalyser {
     private static final Logger log = LoggerFactory.getLogger(TestStanfordNlpAnalyser.class);
     
     private static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final int ANALYZER_THREADS = 10;
+    private static final int ANALYZER_THREADS = 4;
     private static final ClassLoader cl = TestStanfordNlpAnalyser.class.getClassLoader();
     
     private static StanfordNlpAnalyzer analyzer;
@@ -71,6 +74,8 @@ public class TestStanfordNlpAnalyser {
     private static ExecutorService executorService;
     
     private static TagSet<PosTag> TAG_SET = TagSetRegistry.getInstance().getPosTagSet("en");
+    private static TagSet<GrammaticalRelationTag> GRAMMATICAL_RELATION_TAG_SET = 
+        TagSetRegistry.getInstance().getGrammaticalRelationTagSet("en");
     
     private static final Map<String, Blob> examples = new HashMap<String,Blob>();
 
@@ -115,7 +120,7 @@ public class TestStanfordNlpAnalyser {
     @Test
     public void testConcurrentAnalyses() throws IOException, InterruptedException, ExecutionException{
         //warm up
-        log.info("Start concurrent analyses test");
+        log.info("Start concurrent analyses test (iterating over {} test documents)", examples.size());
         log.info("  ... warm up");
         for(Entry<String,Blob> example : examples.entrySet()){
             analyzer.analyse("en",example.getValue());
@@ -123,7 +128,7 @@ public class TestStanfordNlpAnalyser {
 
         //performance test
         long start = System.currentTimeMillis();
-        int concurrentRequests = 3;
+        int concurrentRequests = ANALYZER_THREADS;
         ExecutorService executor = Executors.newFixedThreadPool(concurrentRequests);
         int iterations = 100;
         log.info("  ... start test with {} iterations", iterations);
@@ -150,6 +155,7 @@ public class TestStanfordNlpAnalyser {
         log.info("  > processing : {}ms",sumTime);
         float concurrency = sumTime/(float)duration;
         log.info("  > concurrency: {} / {}%",concurrency, concurrency*100/concurrentRequests);
+        log.info(analyzer.getPipeline("en").timingInformation());
     }
     
     private class AnalyzerRequest implements Runnable {
@@ -209,6 +215,17 @@ public class TestStanfordNlpAnalyser {
                             prevProb < 0 || posTag.probability() <= prevProb);
                         prevProb = posTag.probability();
                     }
+                    
+                    List<Value<DependencyRelation>> dependencyRelations = span.getAnnotations(DEPENDENCY_ANNOTATION);
+                    if (dependencyRelations != null) {
+                        for(Value<DependencyRelation> dependencyRelation : dependencyRelations) {
+                            //assert Mapped GrammaticalRelationTags
+                            Assert.assertTrue("DependencyRelation "+dependencyRelation+" used by "
+                                +span+" is not present in the GrammaticalRelationTagSet",
+                                GRAMMATICAL_RELATION_TAG_SET.getTag(dependencyRelation.value().getGrammaticalRelationTag().getTag()) != null);
+                        }
+                    }
+                    
                     Assert.assertNull("Tokens MUST NOT have Phrase annotations!",
                         span.getAnnotation(PHRASE_ANNOTATION));
                     Assert.assertNull("Tokens MUST NOT have NER annotations!",
@@ -217,6 +234,9 @@ public class TestStanfordNlpAnalyser {
                 case Chunk:
                     Assert.assertNull("Chunks MUST NOT have POS annotations!",
                         span.getAnnotation(POS_ANNOTATION));
+                    Assert.assertNull("Chunks MUST NOT have DEPENDENCY annotations!",
+                        span.getAnnotation(DEPENDENCY_ANNOTATION));
+                    
                     prevProb = -1;
                     List<Value<NerTag>> nerTags = span.getAnnotations(NER_ANNOTATION);
                     boolean hasNerTag = (nerTags != null && !nerTags.isEmpty());
@@ -234,6 +254,8 @@ public class TestStanfordNlpAnalyser {
                         span.getAnnotation(PHRASE_ANNOTATION));
                     Assert.assertNull(span.getType()+" type Spans MUST NOT have NER annotations!",
                         span.getAnnotation(NER_ANNOTATION));
+                    Assert.assertNull(span.getType()+" type Spans MUST NOT have DEPENDENCY annotations!",
+                        span.getAnnotation(DEPENDENCY_ANNOTATION));
                     break;
             }
         }

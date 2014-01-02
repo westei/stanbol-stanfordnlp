@@ -17,13 +17,12 @@
 	<parent>
 		<groupId>at.salzburgresearch.stanbol</groupId>
 		<artifactId>stanbol-stanfordnlp-parent</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.1.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
 	<artifactId>at.salzburgresearch.stanbol.stanbol.enhancer.nlp.stanford.web
 	</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Stanbol Stanford NLP integration: RESTful services</name>
@@ -53,7 +52,7 @@
 			<groupId>at.salzburgresearch.stanbol</groupId>
 			<artifactId>at.salzburgresearch.stanbol.stanbol.enhancer.nlp.stanford.core
 			</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.1.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.stanbol</groupId>

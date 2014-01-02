@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -22,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import at.salzburgresearch.enhancer.nlp.stanford.segment.ArabicSegmentorAnnotator;
-
 import edu.stanford.nlp.ie.NERClassifierCombiner;
 import edu.stanford.nlp.ie.regexp.NumberSequenceClassifier;
 import edu.stanford.nlp.ie.regexp.RegexNERSequenceClassifier;
@@ -168,50 +168,60 @@ public class LangPipeline extends AnnotationPipeline {
         
         @Override
         public Annotator create() {
-          boolean nlSplitting = Boolean.valueOf(properties.getProperty(NEWLINE_SPLITTER_PROPERTY, "false"));
-          if (nlSplitting) {
-            boolean whitespaceTokenization = Boolean.valueOf(properties.getProperty("tokenize.whitespace", "false"));
-            WordsToSentencesAnnotator wts;
-            if (whitespaceTokenization) {
-              if (System.getProperty("line.separator").equals("\n")) {
-                wts = WordsToSentencesAnnotator.newlineSplitter(false, "\n");
+            boolean nlSplitting = Boolean.valueOf(properties.getProperty(NEWLINE_SPLITTER_PROPERTY, "false"));
+            if (nlSplitting) {
+              boolean whitespaceTokenization = Boolean.valueOf(properties.getProperty("tokenize.whitespace", "false"));
+              if (whitespaceTokenization) {
+                if (System.getProperty("line.separator").equals("\n")) {
+                  return WordsToSentencesAnnotator.newlineSplitter(false, "\n");
+                } else {
+                  // throw "\n" in just in case files use that instead of
+                  // the system separator
+                  return WordsToSentencesAnnotator.newlineSplitter(false, System.getProperty("line.separator"), "\n");
+                }
               } else {
-                // throw "\n" in just in case files use that instead of
-                // the system separator
-                wts = WordsToSentencesAnnotator.newlineSplitter(false, System.getProperty("line.separator"), "\n");
+                return WordsToSentencesAnnotator.newlineSplitter(false, PTBTokenizer.getNewlineToken());
               }
+
             } else {
-              wts = WordsToSentencesAnnotator.newlineSplitter(false, PTBTokenizer.getNewlineToken());
-            }
-            return wts;
-          } else {
-            WordsToSentencesAnnotator wts = new WordsToSentencesAnnotator();
+              // Treat as one sentence: You get a no-op sentence splitter that always returns all tokens as one sentence.
+              String isOneSentence = properties.getProperty("ssplit.isOneSentence");
+              if (Boolean.parseBoolean(isOneSentence)) { // this method treats null as false
+                return WordsToSentencesAnnotator.nonSplitter(false);
+              }
 
-            // regular boundaries
-            String bounds = properties.getProperty("ssplit.boundariesToDiscard");
-            if (bounds != null){
-              String [] toks = bounds.split(",");
-              // for(int i = 0; i < toks.length; i ++)
-              //   System.err.println("BOUNDARY: " + toks[i]);
-              wts.setSentenceBoundaryToDiscard(new HashSet<String>
-                                               (Arrays.asList(toks)));
-            }
+              // multi token sentence boundaries
+              String boundaryMultiTokenRegex = properties.getProperty("ssplit.boundaryMultiTokenRegex");
 
-            // HTML boundaries
-            bounds = properties.getProperty("ssplit.htmlBoundariesToDiscard");
-            if (bounds != null){
-              String [] toks = bounds.split(",");
-              wts.addHtmlSentenceBoundaryToDiscard(new HashSet<String>(Arrays.asList(toks)));
-            }
+              // Discard these tokens without marking them as sentence boundaries
+              String tokenPatternsToDiscardProp = properties.getProperty("ssplit.tokenPatternsToDiscard");
+              Set<String> tokenRegexesToDiscard = null;
+              if (tokenPatternsToDiscardProp != null){
+                String [] toks = tokenPatternsToDiscardProp.split(",");
+                tokenRegexesToDiscard = Generics.newHashSet(Arrays.asList(toks));
+              }
+              // regular boundaries
+              String boundaryTokenRegex = properties.getProperty("ssplit.boundaryTokenRegex");
+              Set<String> boundariesToDiscard = null;
 
-            // Treat as one sentence
-            String isOneSentence = properties.getProperty("ssplit.isOneSentence");
-            if (isOneSentence != null){
-              wts.setOneSentence(Boolean.parseBoolean(isOneSentence));
-            }
+              // newline boundaries which are discarded.
+              String bounds = properties.getProperty("ssplit.boundariesToDiscard");
+              if (bounds != null) {
+                String [] toks = bounds.split(",");
+                boundariesToDiscard = Generics.newHashSet(Arrays.asList(toks));
+              }
+              Set<String> htmlElementsToDiscard = null;
+              // HTML boundaries which are discarded
+              bounds = properties.getProperty("ssplit.htmlBoundariesToDiscard");
+              if (bounds != null) {
+                String [] elements = bounds.split(",");
+                htmlElementsToDiscard = Generics.newHashSet(Arrays.asList(elements));
+              }
+              String nlsb = properties.getProperty("ssplit.newlineIsSentenceBreak", "two");
 
-            return wts;
-          }
+              return new WordsToSentencesAnnotator(false, boundaryTokenRegex, boundariesToDiscard, htmlElementsToDiscard,
+                      nlsb, boundaryMultiTokenRegex, tokenRegexesToDiscard);
+            }
         }
 
         @Override
@@ -239,14 +249,7 @@ public class LangPipeline extends AnnotationPipeline {
         
         @Override
         public Annotator create() {
-          try {
-            String maxLenStr = properties.getProperty("pos.maxlen");
-            int maxLen = Integer.MAX_VALUE;
-            if(maxLenStr != null) maxLen = Integer.parseInt(maxLenStr);
-            return new POSTaggerAnnotator(properties.getProperty("pos.model"), false, maxLen);
-          } catch (Exception e) {
-            throw new RuntimeException(e);
-          }
+            return new POSTaggerAnnotator("pos",properties);
         }
 
         @Override
@@ -529,5 +532,7 @@ public class LangPipeline extends AnnotationPipeline {
     public String getLanguage() {
         return language;
     }    
+    
+    
     
 }

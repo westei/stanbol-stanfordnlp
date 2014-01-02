@@ -1,0 +1,7 @@
+
+# The defualt pipeline 
+# (1) Segmentation the text to words
+# (2) Split the text into Sentences
+# (3) POS tags sentences
+# 
+annotators = tokenize, ssplit, segment, pos

@@ -1,0 +1,8 @@
+
+# The defualt pipeline 
+# (1) Segmentation the text to words
+# (2) Split the text into Sentences
+# (3) POS tags sentences
+# (4) Detect Named Entities
+# 
+annotators = segment, ssplit, pos, ner

@@ -54,7 +54,7 @@ public class AnalysisResource {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     public Collection<String> supported(){
         return getStanfordAnalyzer().getSupported();
     }

@@ -11,7 +11,7 @@
 
 	<groupId>at.salzburgresearch.stanbol</groupId>
 	<artifactId>stanbol-stanfordnlp-parent</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Apache Stanbol Stanford NLP integration (parent)</name>
 	<description>
@@ -25,8 +25,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <stanford-parser-version>2.0.5</stanford-parser-version>
-    <stanford-corenlp-version>1.3.5</stanford-corenlp-version>
+    <stanford-parser-version>3.3.0</stanford-parser-version>
+    <stanford-corenlp-version>3.3.0</stanford-corenlp-version>
 	</properties>
 
 	<dependencyManagement>
@@ -62,17 +62,17 @@
       <dependency>
         <groupId>org.apache.stanbol</groupId>
         <artifactId>org.apache.stanbol.enhancer.nlp</artifactId>
-        <version>0.10.0</version>
+        <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.stanbol</groupId>
         <artifactId>org.apache.stanbol.enhancer.nlp.json</artifactId>
-        <version>0.10.0</version>
+        <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.stanbol</groupId>
         <artifactId>org.apache.stanbol.enhancer.core</artifactId>
-        <version>0.10.0</version>
+        <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>jetty</groupId>

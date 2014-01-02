@@ -3,6 +3,7 @@ package at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.MORPHO_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.NER_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
+import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.DEPENDENCY_ANNOTATION;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,9 +17,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.stanbol.enhancer.nlp.dependency.DependencyRelation;
+import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedTextFactory;
 import org.apache.stanbol.enhancer.nlp.model.Chunk;
+import org.apache.stanbol.enhancer.nlp.model.Span;
 import org.apache.stanbol.enhancer.nlp.model.Token;
 import org.apache.stanbol.enhancer.nlp.model.annotation.Value;
 import org.apache.stanbol.enhancer.nlp.model.tag.TagSet;
@@ -34,10 +38,16 @@ import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TokenEndAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.AnnotationPipeline;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
+import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.util.CoreMap;
 
 public class StanfordNlpAnalyzer {
@@ -79,6 +89,15 @@ public class StanfordNlpAnalyzer {
         return old;
     }
     /**
+     * Getter for the Pipeline of a specific language
+     * @param lang the language
+     * @return the pipeline or <code>null</code> if the parsed language is not
+     * supported
+     */
+    public AnnotationPipeline getPipeline(String lang){
+        return pipelines.get(lang);
+    }
+    /**
      * Checks if the parsed language is supported by this Analyzer
      * @param language the language
      * @return <code>true</code> it texts in the parsed language are supported.
@@ -117,7 +136,8 @@ public class StanfordNlpAnalyzer {
         Map<String,PosTag> adhocPosTags = tagSetRegistry.getAdhocPosTagMap(lang);
         TagSet<NerTag> nerTagSet = tagSetRegistry.getNerTagSet(lang);
         Map<String,NerTag> adhocNerTags = tagSetRegistry.getAdhocNerTagMap(lang);
-
+        TagSet<GrammaticalRelationTag> gramRelationTagSet = 
+            tagSetRegistry.getGrammaticalRelationTagSet(lang);
         // run all Annotators on this text
         Annotation document;
         try { //process the text using the executor service
@@ -152,8 +172,11 @@ public class StanfordNlpAnalyzer {
             Token nerStart = null;
             Token nerEnd = null;
             NerTag nerTag = null;
+            List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
+            SemanticGraph dependencies = sentence.get(BasicDependenciesAnnotation.class);
+            int tokenIdxInSentence = 0;
             
-            for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+            for (CoreLabel token : tokens) {
                 if(token.beginPosition() >= token.endPosition()){
                     log.warn("Illegal Token start:{}/end:{} values -> ignored", token.beginPosition(), token.endPosition());
                     continue;
@@ -228,6 +251,10 @@ public class StanfordNlpAnalyzer {
                     }
                     t.addAnnotation(MORPHO_ANNOTATION, Value.value(morpho));
                 }
+                
+                if (dependencies != null) {
+                    addDependencyRelations(tokens, t, at, gramRelationTagSet, dependencies, ++tokenIdxInSentence);
+                }
             } //end iterate over tokens in sentence
             //clean up sentence
             at.addSentence(sentStart.getStart(), sentEnd.getEnd());
@@ -249,5 +276,56 @@ public class StanfordNlpAnalyzer {
 
         return at;
     }
-
+    
+    /**
+     * Add dependency tree annotations to the current token.
+     * 
+     * @param tokens - the list of {@link CoreLabel}s in the current sentence.
+     * @param currentToken - the current {@link Token} to which the dependency relations will
+     * be added.
+     * @param at
+     * @param relationTagSet - tag set containing {@link GrammaticalRelationTag}s.
+     * @param dependencies - the {@link SemanticGraph} containing the dependency tree relations.
+     */
+    private void addDependencyRelations(List<CoreLabel> tokens, Token currentToken, AnalysedText at,
+            TagSet<GrammaticalRelationTag> relationTagSet, SemanticGraph dependencies, int currentTokenIdx) {
+        IndexedWord vertex = dependencies.getNodeByIndexSafe(currentTokenIdx);
+        if (vertex == null) {
+            // Usually the current token is a punctuation mark in this case.
+            return;
+        }
+        
+        List<SemanticGraphEdge> edges = new ArrayList<SemanticGraphEdge>();
+        edges.addAll(dependencies.incomingEdgeList(vertex));
+        edges.addAll(dependencies.outgoingEdgeList(vertex));
+        
+        for (SemanticGraphEdge edge : edges) {
+            int govIndex = edge.getGovernor().index();
+            int depIndex = edge.getDependent().index();
+            GrammaticalRelation gramRel = edge.getRelation();
+            GrammaticalRelationTag gramRelTag = relationTagSet.getTag(gramRel.getShortName());
+            boolean isDependent = false;
+            Span partner = null;
+            
+            if (govIndex == currentTokenIdx) {
+                CoreLabel dependentLabel = tokens.get(depIndex - 1);
+                partner = at.addToken(dependentLabel.beginPosition(), dependentLabel.endPosition());
+            } else if (depIndex == currentTokenIdx) {
+                isDependent = true;
+                CoreLabel governorLabel = tokens.get(govIndex - 1);
+                partner = at.addToken(governorLabel.beginPosition(), governorLabel.endPosition());
+            }
+            
+            currentToken.addAnnotation(DEPENDENCY_ANNOTATION, 
+                Value.value(new DependencyRelation(gramRelTag, isDependent, partner)));
+        }
+        
+        // Finally add the root relation if the word has any.
+        Collection<IndexedWord> roots = dependencies.getRoots();
+        if (roots.contains(vertex)) {
+            GrammaticalRelationTag rootRelTag = relationTagSet.getTag("root");
+            currentToken.addAnnotation(DEPENDENCY_ANNOTATION, 
+                Value.value(new DependencyRelation(rootRelTag, false, null)));
+        }
+    }
 }

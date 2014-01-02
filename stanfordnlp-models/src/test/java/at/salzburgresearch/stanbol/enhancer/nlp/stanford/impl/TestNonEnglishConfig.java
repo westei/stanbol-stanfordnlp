@@ -22,7 +22,6 @@ import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -30,15 +29,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.apache.stanbol.enhancer.contentitem.inmemory.InMemoryContentItemFactory;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
 import org.apache.stanbol.enhancer.nlp.model.Span;
-import org.apache.stanbol.enhancer.nlp.model.Span.SpanTypeEnum;
+import org.apache.stanbol.enhancer.nlp.model.SpanTypeEnum;
 import org.apache.stanbol.enhancer.nlp.model.annotation.Value;
 import org.apache.stanbol.enhancer.nlp.model.tag.TagSet;
 import org.apache.stanbol.enhancer.nlp.ner.NerTag;
@@ -62,15 +59,13 @@ public class TestNonEnglishConfig {
     private static final Logger log = LoggerFactory.getLogger(TestNonEnglishConfig.class);
     
     private static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final int ANALYZER_THREADS = 10;
+    private static final int ANALYZER_THREADS = 4;
     private static final ClassLoader cl = TestNonEnglishConfig.class.getClassLoader();
-    
-    private static StanfordNlpAnalyzer analyzer;
     
     private static ContentItemFactory cif;
     private static ExecutorService executorService;
         
-    private static final Map<String, Blob> deExamples = new HashMap<String,Blob>();
+//    private static final Map<String, Blob> deExamples = new HashMap<String,Blob>();
     private static final Map<String, Blob> frExamples = new HashMap<String,Blob>();
     private static final Map<String, Blob> arExamples = new HashMap<String,Blob>();
     private static final Map<String, Blob> zhExamples = new HashMap<String,Blob>();
@@ -84,7 +79,7 @@ public class TestNonEnglishConfig {
         "mali_vote_france.txt");
     private static final String AR_TEST_CONFIG = "ar.pipeline";
     private static final List<String> AR_TEST_FILE_NAMES = Arrays.asList(
-        "gaza_hamas_killing.txt");
+        "gaza_hamas_killing.txt", "test1.txt", "test2.txt", "test3.txt", "test4.txt");
     private static final String ZH_TEST_CONFIG = "zh.pipeline";
     private static final List<String> ZH_TEST_FILE_NAMES = Arrays.asList(
         "liushihui_beaten_linzhao.txt");
@@ -94,18 +89,8 @@ public class TestNonEnglishConfig {
     
     @BeforeClass
     public static void initStanfordNlpPipeline() throws Exception {
+        log.info("Init ExecutorService with {} threads", ANALYZER_THREADS);
         executorService = Executors.newFixedThreadPool(ANALYZER_THREADS);
-        analyzer = new StanfordNlpAnalyzer(executorService, null);
-//        Assert.assertNotNull("Unable to find test configuration '"+DE_TEST_CONFIG+"'!", 
-//            TestNonEnglishConfig.class.getClassLoader().getResource(DE_TEST_CONFIG));
-//        LangPipeline pipeline = new LangPipeline(DE_TEST_CONFIG);
-//        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
-        LangPipeline pipeline = new LangPipeline(FR_TEST_CONFIG);
-        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
-        pipeline = new LangPipeline(AR_TEST_CONFIG);
-        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
-        pipeline = new LangPipeline(ZH_TEST_CONFIG);
-        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
         cif = InMemoryContentItemFactory.getInstance();
         //init the text eamples
 //        for(String name : DE_TEST_FILE_NAMES){
@@ -113,17 +98,23 @@ public class TestNonEnglishConfig {
 //            deExamples.put(name, cif.createBlob(new StreamSource(
 //                cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
 //        }
+        log.info("Init French Language Test Files");
         for(String name : FR_TEST_FILE_NAMES){
+            log.info(" ... {}",name);
             String file = TEST_FILE_FOLDER+"/fr/"+name;
             frExamples.put(name, cif.createBlob(new StreamSource(
                 cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
         }
+        log.info("Init Arabic Language Test Files");
         for(String name : AR_TEST_FILE_NAMES){
+            log.info(" ... {}",name);
             String file = TEST_FILE_FOLDER+"/ar/"+name;
             arExamples.put(name, cif.createBlob(new StreamSource(
                 cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
         }
+        log.info("Init Chinese Language Test Files");
         for(String name : ZH_TEST_FILE_NAMES){
+            log.info(" ... {}",name);
             String file = TEST_FILE_FOLDER+"/zh/"+name;
             zhExamples.put(name, cif.createBlob(new StreamSource(
                 cl.getResourceAsStream(file),"text/plain; charset="+UTF8.name())));
@@ -131,15 +122,21 @@ public class TestNonEnglishConfig {
     }
 
 
-    @Test
-    public void testDeAnalysis() throws IOException {
-        for(Entry<String,Blob> example : deExamples.entrySet()){
-            AnalysedText at = analyzer.analyse("de",example.getValue());
-            validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("de"));
-        }
-	}
+//    @Test
+//    public void testDeAnalysis() throws IOException {
+//        for(Entry<String,Blob> example : deExamples.entrySet()){
+//            AnalysedText at = analyzer.analyse("de",example.getValue());
+//            validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("de"));
+//        }
+//	}
+
     @Test
     public void testFrAnalysis() throws IOException {
+        log.info("init French Analyzer Pipeline");
+        StanfordNlpAnalyzer analyzer = new StanfordNlpAnalyzer(executorService, null);
+        LangPipeline pipeline = new LangPipeline(FR_TEST_CONFIG);
+        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
+        log.info(" ... initialised");
         for(Entry<String,Blob> example : frExamples.entrySet()){
             AnalysedText at = analyzer.analyse("fr",example.getValue());
             validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("fr"));
@@ -147,6 +144,11 @@ public class TestNonEnglishConfig {
     }
     @Test
     public void testArAnalysis() throws IOException {
+        log.info("init Arabic Analyzer Pipeline");
+        StanfordNlpAnalyzer analyzer = new StanfordNlpAnalyzer(executorService, null);
+        LangPipeline pipeline = new LangPipeline(AR_TEST_CONFIG);
+        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
+        log.info(" ... initialised");
         for(Entry<String,Blob> example : arExamples.entrySet()){
             AnalysedText at = analyzer.analyse("ar",example.getValue());
             validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("ar"));
@@ -154,6 +156,11 @@ public class TestNonEnglishConfig {
     }
     @Test
     public void testZhAnalysis() throws IOException {
+        log.info("init Chinese Analyzer Pipeline");
+        StanfordNlpAnalyzer analyzer = new StanfordNlpAnalyzer(executorService, null);
+        LangPipeline pipeline = new LangPipeline(ZH_TEST_CONFIG);
+        analyzer.setPipeline(pipeline.getLanguage(), pipeline);
+        log.info(" ... initialised");
         for(Entry<String,Blob> example : zhExamples.entrySet()){
             AnalysedText at = analyzer.analyse("zh",example.getValue());
             validateAnalysedText(at.getSpan(), at, tagSetRegistry.getPosTagSet("zh"));

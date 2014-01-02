@@ -1,19 +1,19 @@
 
-RELEASE_DATE=2013-04-04
+RELEASE_DATE=2013-11-12
 
 #Archive names
 WORD_SEGMENTOR_ARCHIVE=stanford-segmenter-${RELEASE_DATE}.zip
 POS_MODEL_ARCHIVE=stanford-postagger-full-${RELEASE_DATE}.zip
-NER_CHINESE_ARCHIVE=stanford-chinese-corenlp-2013-04-08-models.jar
+NER_CHINESE_ARCHIVE=stanford-chinese-corenlp-${RELEASE_DATE}-models.jar
 #German NER does not exist for newer releases
-NER_GERMAN_ARCHIVE=stanford-ner-2012-05-22-german.tgz
+#NER_GERMAN_ARCHIVE=stanford-ner-2012-05-22-german.tgz
 
 #the list of the used POS models
 POS_MODELS=(\
-    arabic-fast \
+    arabic \
     chinese-distsim \
     french \
-    german-fast \
+#    german-fast \
     )
 
 # Turn on echoing and exit on error
@@ -66,13 +66,13 @@ do
 done
 
 # Download German NER model
-if [ ! -f ${NER_GERMAN_ARCHIVE} ]
-then
-    wget http://nlp.stanford.edu/software/${NER_GERMAN_ARCHIVE}
-fi
+#if [ ! -f ${NER_GERMAN_ARCHIVE} ]
+#then
+#    wget http://nlp.stanford.edu/software/${NER_GERMAN_ARCHIVE}
+#fi
 
-german_model_path="${NER_GERMAN_ARCHIVE%.*}"
-tar zxvf ${NER_GERMAN_ARCHIVE} -C ../src/main/resources/models --include "hgc_175m_600*"
+#german_model_path="${NER_GERMAN_ARCHIVE%.*}"
+#tar zxvf ${NER_GERMAN_ARCHIVE} -C ../src/main/resources/models --include "hgc_175m_600*"
 
 
 # Download Chinese NER

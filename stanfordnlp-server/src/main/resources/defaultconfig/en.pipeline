@@ -5,12 +5,11 @@
 # (3) POS tags sentences
 # (4) Lemmatize words
 # (5) Detect Named Entities
-# (6) Parse Tree
 # 
 annotators = tokenize, ssplit, pos, lemma, ner
 
 # Optional Analyzers that could be added
-# regexner, parse
+# regexner
 
 # NOTE:
 # Models are provided by the stanford-corenlp-models jar
