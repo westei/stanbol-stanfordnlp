@@ -74,25 +74,30 @@
         <artifactId>org.apache.stanbol.enhancer.core</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
-      <dependency>
-        <groupId>jetty</groupId>
-        <artifactId>jetty</artifactId>
-        <version>6.0.2</version>
+      <dependency> <!-- JAX-RS 1.* -->
+        <groupId>javax.ws.rs</groupId>
+        <artifactId>jsr311-api</artifactId>
+        <version>1.1.1</version>
       </dependency>
       <dependency>
-        <groupId>jetty</groupId>
-        <artifactId>jetty-util</artifactId>
-        <version>6.0.2</version>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>9.1.0.v20131115</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>9.1.0.v20131115</version>
       </dependency>
       <dependency>
         <groupId>org.apache.wink</groupId>
         <artifactId>wink-server</artifactId>
-        <version>1.2.1-incubating</version>
+        <version>1.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.wink</groupId>
         <artifactId>wink-jackson-provider</artifactId>
-        <version>1.2.1-incubating</version>
+        <version>1.4</version>
       </dependency>
       
       <dependency>

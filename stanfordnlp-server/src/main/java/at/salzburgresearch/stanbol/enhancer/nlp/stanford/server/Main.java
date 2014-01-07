@@ -21,14 +21,11 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.stanbol.enhancer.nlp.model.AnalysedTextFactory;
 import org.apache.stanbol.enhancer.servicesapi.ContentItemFactory;
 import org.apache.wink.server.internal.servlet.RestServlet;
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,24 +101,24 @@ public class Main {
         //init the Jetty Server
         int port = getInt(line,'p',DEFAULT_PORT);
         log.info(" > Initialise Jetty Server on Port {}",port);
-        Server server = new Server();
-        Connector con = new SelectChannelConnector();
-        //we need the port
-        con.setPort(port);
-        server.addConnector(con);
-
+        Server server = new Server(port);
+        
         log.info(" ... JAX-RS Application");
         //init the Servlet and the ServletContext
-        Context context = new Context(server, "/", Context.SESSIONS);
+        log.info(" ... configure Servlet handler");
+        ServletContextHandler handler = new ServletContextHandler();
+        //Apache Wink
         ServletHolder holder = new ServletHolder(RestServlet.class);
+        //Jersey
+        //ServletHolder holder = new ServletHolder(new ServletContainer());
         holder.setInitParameter("javax.ws.rs.Application", StanfordNlpApplication.class.getName());
-        context.addServlet(holder, "/*");
-        
-        log.info(" ... configure Servlet Context");
+        handler.addServlet(holder, "/*");
+        handler.setContextPath("/");
+        server.setHandler(handler);
         //now initialise the servlet context
-        context.setAttribute(Constants.SERVLET_ATTRIBUTE_CONTENT_ITEM_FACTORY, 
+        handler.setAttribute(Constants.SERVLET_ATTRIBUTE_CONTENT_ITEM_FACTORY, 
             lookupService(ContentItemFactory.class));
-        context.setAttribute(Constants.SERVLET_ATTRIBUTE_STANFORD_NLP, analyzer);
+        handler.setAttribute(Constants.SERVLET_ATTRIBUTE_STANFORD_NLP, analyzer);
         
         log.info(" ... starting server");
         server.start();

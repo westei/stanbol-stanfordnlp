@@ -125,13 +125,17 @@
       </dependency>
       <!-- Jetty -->
       <dependency>
-        <groupId>jetty</groupId>
-        <artifactId>jetty</artifactId>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
       </dependency>
       <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+      </dependency>
+      <!-- dependency>
         <groupId>jetty</groupId>
         <artifactId>jetty-util</artifactId>
-      </dependency>
+      </dependency -->
       <!-- Wink as JAX-RS framework -->
       <dependency>
         <groupId>org.apache.wink</groupId>
@@ -141,6 +145,22 @@
         <groupId>org.apache.wink</groupId>
         <artifactId>wink-jackson-provider</artifactId>
       </dependency>
+      <!-- Jersey as alternative to Wink -->
+      <!-- dependency>
+        <groupId>org.glassfish.jersey.core</groupId>
+        <artifactId>jersey-server</artifactId>
+        <version>2.5.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.containers</groupId>
+        <artifactId>jersey-container-servlet-core</artifactId>
+        <version>2.5.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.media</groupId>
+        <artifactId>jersey-media-json-jackson</artifactId>
+        <version>2.5.1</version>
+      </dependency -->
       <!-- for logging -->
       <dependency>
         <groupId>org.slf4j</groupId>
