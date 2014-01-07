@@ -30,6 +30,7 @@
           <exclude>META-INF/maven/**</exclude>
           <!-- exclude>META-INF/services/</exclude -->
           <exclude>log4j.properties</exclude>
+          <!-- this module provides its own default config -->
           <exclude>defaultconfig/**</exclude>
         </excludes>
       </unpackOptions>
