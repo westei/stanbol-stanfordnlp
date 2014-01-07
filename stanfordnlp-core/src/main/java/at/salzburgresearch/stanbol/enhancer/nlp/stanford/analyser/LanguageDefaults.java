@@ -24,9 +24,17 @@ public final class LanguageDefaults {
             String defaultsResource = new StringBuilder("defaults/").append(language)
                     .append(".properties").toString();
             InputStream in = LanguageDefaults.class.getClassLoader().getResourceAsStream(defaultsResource);
+            //add support for loading defaults for 'en' for a pipeline of 'en-us' and 'en-gb'
+            if(in == null && language.indexOf('-') > 0){
+                log.info("No defaults for Language '{}'. Try to load defaults for root language");
+                language = language.substring(0,language.indexOf('-'));
+                defaultsResource = new StringBuilder("defaults/").append(language)
+                    .append(".properties").toString();
+                in = LanguageDefaults.class.getClassLoader().getResourceAsStream(defaultsResource);
+            }
             if(in == null){
                 log.warn("No defaults for Language '{}' (expected resource path {})",
-                    language,defaultsResource);
+                    language , defaultsResource);
                 return new Properties();
             } else {
                 try {

@@ -17,6 +17,7 @@
 package at.salzburgresearch.stanbol.enhancer.nlp.stanford.mappings;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.clerezza.rdf.core.UriRef;
@@ -28,8 +29,12 @@ import org.apache.stanbol.enhancer.nlp.pos.LexicalCategory;
 import org.apache.stanbol.enhancer.nlp.pos.Pos;
 import org.apache.stanbol.enhancer.nlp.pos.PosTag;
 import org.apache.stanbol.enhancer.servicesapi.rdf.OntologicalClasses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TagSetRegistry {
+    
+    private final Logger log = LoggerFactory.getLogger(TagSetRegistry.class);
 
     private static TagSetRegistry instance = new TagSetRegistry();
     
@@ -91,7 +96,15 @@ public class TagSetRegistry {
      * @return the AnnotationModel or <code>null</code> if non is defined
      */
     public TagSet<PosTag> getPosTagSet(String language){
-        return posModels.get(language);
+        for(String lang : parseLanguage(language)){
+            TagSet<PosTag> tagset = posModels.get(lang);
+            if(tagset != null){
+                log.debug("select {} POS tagset for language {}", lang, language);
+                return tagset;
+            }
+        }
+        log.debug("No POS tagset registered for language {}", language);
+        return null;
     }
     /**
      * Getter for the {@link NerTag} {@link TagSet} by language. If no {@link TagSet}
@@ -100,8 +113,34 @@ public class TagSetRegistry {
      * @return the AnnotationModel or <code>null</code> if non is defined
      */
     public TagSet<NerTag> getNerTagSet(String language){
-        TagSet<NerTag>  tagset = nerModels.get(language);
-        return tagset == null ? DEFAULT_NER_TAGSET : tagset; 
+        for(String lang : parseLanguage(language)){
+            TagSet<NerTag>  tagset = nerModels.get(lang);
+            if(tagset != null){
+                log.debug("select {} NER tagset for language {}", lang, language);
+                return tagset;
+            }
+        }
+        return DEFAULT_NER_TAGSET; //fallback to default 
+    }
+    
+    /**
+     * Parses languages with extensions and also converts the parsed language
+     * to lower case
+     * @param language the language
+     * @return the array of compatible languages. Most specific first. If
+     * <code>null<code> or an empty string is parsed an empty array is returned.
+     */
+    protected String[] parseLanguage(String language){
+        if(language == null || language.isEmpty()){
+            return new String[]{};
+        }
+        language = language.toLowerCase(Locale.ROOT);
+        int idx = language.indexOf('-');
+        if(idx <= 1){ //ignore 'x-*' language codes
+            return new String[]{language};
+        } else { //split languages with extension 'en-US'
+            return new String[]{language, language.substring(0,idx)};
+        }
     }
     
     /**
@@ -133,7 +172,15 @@ public class TagSetRegistry {
      * @return the AnnotationModel or <code>null</code> if non is defined
      */
     public TagSet<GrammaticalRelationTag> getGrammaticalRelationTagSet(String language) {
-        return gramRelationModels.get(language);
+        for(String lang : parseLanguage(language)){
+            TagSet<GrammaticalRelationTag> tagset = gramRelationModels.get(language);
+            if(tagset != null){
+                log.debug("select {} GrammaticalRelationTag tagset for language {}", lang, language);
+                return tagset;
+            }
+        }
+        log.debug("No GrammaticalRelationTag tagset registered for language {}", language);
+        return null;
     }
     
     /*

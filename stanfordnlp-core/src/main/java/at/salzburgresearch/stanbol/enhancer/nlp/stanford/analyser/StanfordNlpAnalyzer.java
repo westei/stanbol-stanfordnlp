@@ -80,7 +80,7 @@ public class StanfordNlpAnalyzer {
         if(pipeline == null){
             throw new IllegalArgumentException("The parsed annotation pipeline MUST NOT be NULL!");
         }
-        AnnotationPipeline old = pipelines.put(language, pipeline);
+        AnnotationPipeline old = pipelines.put(language.toLowerCase(Locale.ROOT), pipeline);
         if(old == null){
             List<String> supported = new ArrayList<String>(pipelines.keySet());
             Collections.sort(supported);

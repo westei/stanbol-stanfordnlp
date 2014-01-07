@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
@@ -78,8 +79,8 @@ public class AnalysisResource {
                 + "Header MUST only have a single value (parsed: "+
                     contentLanguages.toString()+")!").build();
         } else {
-            String clString = contentLanguages.get(0);
-            if(clString.length() != 2){
+            String clString = contentLanguages.get(0).toLowerCase(Locale.ROOT);
+            if(clString.length() != 2 && clString.indexOf('-') <= 0){
                 return Response.status(BAD_REQUEST).entity("The " + CONTENT_LANGUAGE
                     + "Header MUST use two digit (ISO 639-1) language codes (parsed: "+
                     clString+")!").build();
