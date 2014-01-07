@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+	license agreements. See the NOTICE file distributed with this work for additional 
+	information regarding copyright ownership. The ASF licenses this file to 
+	You under the Apache License, Version 2.0 (the "License"); you may not use 
+	this file except in compliance with the License. You may obtain a copy of 
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+	by applicable law or agreed to in writing, software distributed under the 
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+	OF ANY KIND, either express or implied. See the License for the specific 
+	language governing permissions and limitations under the License. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+  <parent>
+		<groupId>at.salzburgresearch.stanbol</groupId>
+		<artifactId>stanbol-stanfordnlp-parent</artifactId>
+    <version>1.1.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+  
+  <artifactId>stanbol-stanfordnlp-server</artifactId>
+	<packaging>jar</packaging>
+
+	<name>Apache Stanbol Stanford NLP integration: Standalone RESTful server</name>
+	<description>
+    Provides a runable jar running an embedded Jetty server hosting the
+    RESTful services used by Apache Stanbol to call the Stanford NLP Analysis
+  </description>
+
+	<inceptionYear>2013</inceptionYear>
+
+	<build>
+		<plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <descriptors>
+            <descriptor>src/main/assembly/assembly.xml</descriptor>
+          </descriptors>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>at.salzburgresearch.stanbol.enhancer.nlp.stanford.server.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+        <executions>
+          <execution> <!-- execute during normal build -->
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+           </execution>
+         </executions>
+      </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+    <dependencies>
+      <dependency>
+        <groupId>at.salzburgresearch.stanbol</groupId>
+        <artifactId>stanbol-stanfordnlp-web</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>at.salzburgresearch.stanbol</groupId>
+        <artifactId>stanbol-stanfordnlp-core</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+      </dependency>
+      
+      <!-- Included Stanford NLP models -->
+      <dependency> <!-- tokenizer models -->
+        <groupId>edu.stanford.nlp</groupId>
+        <artifactId>stanford-parser</artifactId>
+        <classifier>models</classifier>
+      </dependency>
+      <dependency> <!-- english POS, NER, ... -->
+        <groupId>edu.stanford.nlp</groupId>
+        <artifactId>stanford-corenlp</artifactId>
+        <classifier>models</classifier>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.apache.stanbol</groupId>
+        <artifactId>org.apache.stanbol.enhancer.nlp</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.stanbol</groupId>
+        <artifactId>org.apache.stanbol.enhancer.nlp.json</artifactId>
+      </dependency>
+      <dependency> <!-- need core for ContentItem and Blob implementations -->
+        <groupId>org.apache.stanbol</groupId>
+        <artifactId>org.apache.stanbol.enhancer.core</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+      </dependency>
+      <dependency> <!-- for the Main (command line utility) -->
+        <groupId>commons-cli</groupId>
+        <artifactId>commons-cli</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+      </dependency>
+      <!-- Jetty -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+      </dependency>
+      <!-- dependency>
+        <groupId>jetty</groupId>
+        <artifactId>jetty-util</artifactId>
+      </dependency -->
+      <!-- Wink as JAX-RS framework -->
+      <dependency>
+        <groupId>org.apache.wink</groupId>
+        <artifactId>wink-server</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.wink</groupId>
+        <artifactId>wink-jackson-provider</artifactId>
+      </dependency>
+      <!-- Jersey as alternative to Wink -->
+      <!-- dependency>
+        <groupId>org.glassfish.jersey.core</groupId>
+        <artifactId>jersey-server</artifactId>
+        <version>2.5.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.containers</groupId>
+        <artifactId>jersey-container-servlet-core</artifactId>
+        <version>2.5.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.media</groupId>
+        <artifactId>jersey-media-json-jackson</artifactId>
+        <version>2.5.1</version>
+      </dependency -->
+      <!-- for logging -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+      </dependency>
+      <dependency> <!-- we use log4j 1.2 -->
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency> <!-- see also the log4j.properties in src/main/resources -->
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <scope>runtime</scope>
+      </dependency>
+	</dependencies>
+
+
+
+</project>

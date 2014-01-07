@@ -4,5 +4,5 @@
 *.jar
 *.war
 *.ear
-stanfordnlp-models/downloads
-stanfordnlp-models/src/main/resources/models
+models/downloads
+models/src/main/resources/models

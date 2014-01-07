@@ -110,11 +110,12 @@
 	</dependencyManagement>
 
 	<modules>
-		<module>stanfordnlp-segment</module>
-		<module>stanfordnlp-core</module>
-    <module>stanfordnlp-models</module>
-		<module>stanfordnlp-web</module>
-		<module>stanfordnlp-server</module>
+		<module>segment</module>
+		<module>core</module>
+    <module>models</module>
+		<module>web</module>
+		<module>server</module>
+		<module>server-int</module>
 	</modules>
 
 	<build>
