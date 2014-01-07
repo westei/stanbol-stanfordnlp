@@ -72,3 +72,11 @@ All modules are dual licensed under the [GPL](http://www.fsf.org/licenses/gpl.ht
 ### Why two licenses
 
 While I am no expert the intension of having two licenses is the following: Executing this code requires to confirm to the more restrictive rules defined by the [GPL](http://www.fsf.org/licenses/gpl.html) as this software does depend to the GPL licensed Stanford NLP libraries. The more permissive Apache License will still allow users to take code snippets or utility classes and do with them what ever they want.
+
+Acknowledgements:
+-----------------
+
+Original work on this project was partly funded by [IKS-Project](http://iks-project.eu/) a European Community's Seventh Framework Programme (FP7/2007-2013) under grant agreement n° 231527.
+
+Recent work was funded by [MICO](http://www.mico-project.eu/) also a FP7 project under grant agreement n° 610480
+
