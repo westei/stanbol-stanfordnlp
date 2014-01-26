@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import at.salzburgresearch.enhancer.nlp.stanford.segment.ArabicSegmentorAnnotator;
+import at.salzburgresearch.stanbol.enhancer.nlp.stanford.impl.StanbolDeterministicCorefAnnotator;
 import edu.stanford.nlp.ie.NERClassifierCombiner;
 import edu.stanford.nlp.ie.regexp.NumberSequenceClassifier;
 import edu.stanford.nlp.ie.regexp.RegexNERSequenceClassifier;
@@ -33,6 +34,7 @@ import edu.stanford.nlp.pipeline.AnnotatorPool;
 import edu.stanford.nlp.pipeline.CharniakParserAnnotator;
 import edu.stanford.nlp.pipeline.ChineseSegmenterAnnotator;
 import edu.stanford.nlp.pipeline.DefaultPaths;
+import edu.stanford.nlp.pipeline.DeterministicCorefAnnotator;
 import edu.stanford.nlp.pipeline.MorphaAnnotator;
 import edu.stanford.nlp.pipeline.NERCombinerAnnotator;
 import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
@@ -425,6 +427,32 @@ public class LangPipeline extends AnnotationPipeline {
         }
     }
 
+    private class DeterministicCorefFactory extends AnnotatorFactory {
+        private static final long serialVersionUID = 1L;
+        
+        /**
+         * the properties.<p>
+         * <b>NOTE:</b> Con not use protected field in super class, because is
+         * copies the parsed properties and therefore looses the defaults (parent
+         * properties)
+         */
+        private final Properties properties;
+
+        public DeterministicCorefFactory(Properties properties) {
+            super(DUMMY_PROPERTIES); //Not used
+            this.properties = properties;
+        }
+        
+        @Override
+        public Annotator create() {
+          return new StanbolDeterministicCorefAnnotator(properties);
+        }
+
+        @Override
+        public String signature() {
+            return "";
+        }
+    }
     
     private final AnnotatorPool pool = new AnnotatorPool();
 
@@ -505,12 +533,25 @@ public class LangPipeline extends AnnotationPipeline {
      */
     private void initPipeline(Properties properties) {
         log.info("reading annotation pipeline {}",properties.getProperty("annotators"));
+        Annotator parseAnnotator = null;
+        
         for(String name : properties.getProperty("annotators","").split("[, \t]+")){
             Annotator annotator = pool.get(name.trim());
             if(annotator == null){
                 throw new IllegalArgumentException("Annotator '"+name+"' is not "
                     + "not supported!");
             }
+            
+            if (name.equals(STANFORD_PARSE)) {
+                parseAnnotator = annotator;
+            } else if (name.equals(STANFORD_DETERMINISTIC_COREF)) {
+                if (parseAnnotator == null) {
+                    throw new IllegalArgumentException(STANFORD_DETERMINISTIC_COREF + " annotator needs the " + STANFORD_PARSE 
+                        + " annotator to be defined beforehand.");
+                }
+                ((StanbolDeterministicCorefAnnotator)annotator).setParserAnnotator(parseAnnotator);
+            }
+            
             this.addAnnotator(annotator);
         }
     }
@@ -527,12 +568,10 @@ public class LangPipeline extends AnnotationPipeline {
         pool.register(STANFORD_REGEXNER, new RegexNerFactory(properties));
         pool.register(STANFORD_LEMMA, new LemmatizerFactory(properties));
         pool.register(STANFORD_SEGMENT, new SegmentorFactory(properties));
+        pool.register(STANFORD_DETERMINISTIC_COREF, new DeterministicCorefFactory(properties));
     }
 
     public String getLanguage() {
         return language;
-    }    
-    
-    
-    
+    }       
 }
