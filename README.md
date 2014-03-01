@@ -63,6 +63,8 @@ For each supported language a `{lang}.properties` file need to be present in the
 
 When adding support for a new language (lets say you do have POS and NER models for Spanish) you need to create a `es.properties` file and configure the language as described on the [CoreNLP](http://www-nlp.stanford.edu/software/corenlp.shtml) webpage.
 
+__Using parse and dcoref annotators__: If you want to use these annotators in the configuration, when starting the server you must use the -Xmg3g memory setting. The two annotators are supported at the moment only on the english server.
+
 
 License(s):
 -----------
