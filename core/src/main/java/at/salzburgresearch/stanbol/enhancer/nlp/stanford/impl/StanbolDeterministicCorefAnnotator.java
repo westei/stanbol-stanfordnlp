@@ -42,7 +42,7 @@ import edu.stanford.nlp.util.PropertiesUtils;
  *
  * NOTE: since most of the code is the same as the one in {@link DeterministicCorefAnnotator}
  * when an upgrade to a newer version of the Stanford NLP lib is done this class needs to 
- * be updated as well.
+ * be updated as well. Code introduced for Stanbol is marked with <stanbolAddition></stanbolAddition>
  * 
  * @author Cristian Petroaca
  */
@@ -60,7 +60,9 @@ public class StanbolDeterministicCorefAnnotator implements Annotator {
 
   private final boolean allowReparsing;
   
+  //<stanbolAddition>
   private Annotator parserProcessor;
+  //</stanbolAddition>
   
   public StanbolDeterministicCorefAnnotator(Properties props) {
     try {
@@ -118,10 +120,13 @@ public class StanbolDeterministicCorefAnnotator implements Annotator {
 
       // extract all possible mentions
       // this is created for each new annotation because it is not threadsafe
+      //<stanbolAddition>
       if (parserProcessor == null) {
     	  throw new RuntimeException("parse annotator cannot be null");
       }
       RuleBasedCorefMentionFinder finder = new StanbolRuleBasedCorefMentionFinder(parserProcessor, allowReparsing);
+      //</stanbolAddition>
+      
       List<List<Mention>> allUnprocessedMentions = finder.extractPredictedMentions(annotation, 0, corefSystem.dictionaries());
 
       // add the relevant info to mentions and order them for coref
@@ -214,7 +219,9 @@ public class StanbolDeterministicCorefAnnotator implements Annotator {
     return Collections.singleton(DETERMINISTIC_COREF_REQUIREMENT);
   }
   
+  //<stanbolAddition>
   public void setParserAnnotator(Annotator parserAnnotator) {
 	  parserProcessor = parserAnnotator;
   }
+  //</stanbolAddition>
 }
