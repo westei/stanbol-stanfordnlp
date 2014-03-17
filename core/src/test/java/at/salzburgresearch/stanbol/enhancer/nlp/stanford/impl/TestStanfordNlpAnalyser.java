@@ -20,6 +20,7 @@ import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.NER_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.PHRASE_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.DEPENDENCY_ANNOTATION;
+import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.COREF_ANNOTATION;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -37,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.stanbol.enhancer.contentitem.inmemory.InMemoryContentItemFactory;
+import org.apache.stanbol.enhancer.nlp.coref.CorefFeature;
 import org.apache.stanbol.enhancer.nlp.dependency.DependencyRelation;
 import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
@@ -82,14 +84,14 @@ public class TestStanfordNlpAnalyser {
     private static final String TEST_CONFIG = "en.pipeline";
     private static final String TEST_FILE_FOLDER = "text-examples";
     private static final List<String> TEST_FILE_NAMES = Arrays.asList("countrymention.txt",
-        "Egypt-protests_wikinews-org.txt", "jimi-hendrix.txt", "nuclear-fusion.txt", 
-        "plasma.txt", "astronomers-discover-star.txt", "china-oil-spill.txt", 
-        "obama-oil-drilling.txt", "robben-ford.txt", "australia-debate.txt",
-        "mitchell-bio.txt", "obama-signing.txt", "robbie-williams.txt",
-        "hillary-clinton.txt", "mitchell-joy-in-town.txt", "obama-tsa.txt",
-        "singapore-police.txt", "indian-train-crash.txt", "michael-jackson.txt",
-        "mitchell-safaris.txt", "obama.txt", "turkish-internet.txt",
-        "coalition-australia.txt");
+    	"Egypt-protests_wikinews-org.txt", "jimi-hendrix.txt", "nuclear-fusion.txt", 
+    	"plasma.txt", "astronomers-discover-star.txt", "china-oil-spill.txt", 
+    	"obama-oil-drilling.txt", "robben-ford.txt", "australia-debate.txt",
+    	"mitchell-bio.txt", "obama-signing.txt", "robbie-williams.txt",
+    	"hillary-clinton.txt", "mitchell-joy-in-town.txt", "obama-tsa.txt",
+    	"singapore-police.txt", "indian-train-crash.txt", "michael-jackson.txt",
+    	"mitchell-safaris.txt", "obama.txt", "turkish-internet.txt",
+    	"coalition-australia.txt");
     
     @BeforeClass
     public static void initStanfordNlpPipeline() throws Exception {
@@ -226,6 +228,13 @@ public class TestStanfordNlpAnalyser {
                         }
                     }
                     
+                    // Test the Coref Annotations
+                    Value<CorefFeature> corefFeatureInToken = span.getAnnotation(COREF_ANNOTATION);
+                    if (corefFeatureInToken != null) {
+                        Assert.assertTrue("Coref Feature " + corefFeatureInToken + " used by " + span
+                            + " does not have ay mentions.", corefFeatureInToken.value().getMentions().size() > 0);
+                    }
+                    
                     Assert.assertNull("Tokens MUST NOT have Phrase annotations!",
                         span.getAnnotation(PHRASE_ANNOTATION));
                     Assert.assertNull("Tokens MUST NOT have NER annotations!",
@@ -239,12 +248,20 @@ public class TestStanfordNlpAnalyser {
                     
                     prevProb = -1;
                     List<Value<NerTag>> nerTags = span.getAnnotations(NER_ANNOTATION);
+                    Value<CorefFeature> corefFeatureInChunk = span.getAnnotation(COREF_ANNOTATION);
                     boolean hasNerTag = (nerTags != null && !nerTags.isEmpty());
-                    Assert.assertTrue("All Chunks need to have a NER Tag (missing for "
-                            + span+ ")",  hasNerTag);
+                    boolean hasCorefFeature = (corefFeatureInChunk != null);
+                    Assert.assertTrue("All Chunks need to have a NER Tag or a COREF feature (missing for "
+                            + span+ ")",  hasNerTag || hasCorefFeature);
                     for(Value<NerTag> nerTag : nerTags){
                         Assert.assertNotEquals("NER Tags MUST NOT use '0' as Tag",
                             "0",nerTag.value().getTag());
+                    }
+                    
+                    // Test the Coref Annotations
+                    if (corefFeatureInChunk != null) {
+                        Assert.assertTrue("Coref Feature " + corefFeatureInChunk + " used by " + span
+                            + " does not have ay mentions.", corefFeatureInChunk.value().getMentions().size() > 0);
                     }
                     break;
                 default:
@@ -256,6 +273,8 @@ public class TestStanfordNlpAnalyser {
                         span.getAnnotation(NER_ANNOTATION));
                     Assert.assertNull(span.getType()+" type Spans MUST NOT have DEPENDENCY annotations!",
                         span.getAnnotation(DEPENDENCY_ANNOTATION));
+                    Assert.assertNull(span.getType()+" type Spans MUST NOT have COREF annotations!",
+                        span.getAnnotation(COREF_ANNOTATION));
                     break;
             }
         }

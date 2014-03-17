@@ -4,19 +4,23 @@ import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.MORPHO_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.NER_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.DEPENDENCY_ANNOTATION;
+import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.COREF_ANNOTATION;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.stanbol.enhancer.nlp.coref.CorefFeature;
 import org.apache.stanbol.enhancer.nlp.dependency.DependencyRelation;
 import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
@@ -34,11 +38,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.mappings.TagSetRegistry;
+import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TokenEndAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -255,7 +261,12 @@ public class StanfordNlpAnalyzer {
                     t.addAnnotation(MORPHO_ANNOTATION, Value.value(morpho));
                 }
                 
-                if (dependencies != null) {
+                /*
+                 * Add dependencies only if the parse annotator is in the
+                 * pipeline and we have a grammatical relation {@link TagSet}
+                 * for the given language.
+                 */
+                if (dependencies != null && gramRelationTagSet != null) {
                     addDependencyRelations(tokens, t, at, gramRelationTagSet, dependencies, ++tokenIdxInSentence);
                 }
             } //end iterate over tokens in sentence
@@ -274,8 +285,10 @@ public class StanfordNlpAnalyzer {
         // Each chain stores a set of mentions that link to each other,
         // along with a method for getting the most representative mention
         // Both sentence and token offsets start at 1!
-        // Map<Integer, CorefChain> graph =
-        // document.get(CorefChainAnnotation.class);
+        Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
+        if (graph != null) {
+            addCorefMentions(graph, at, sentences);
+        }
 
         return at;
     }
@@ -329,6 +342,70 @@ public class StanfordNlpAnalyzer {
             GrammaticalRelationTag rootRelTag = relationTagSet.getTag("root");
             currentToken.addAnnotation(DEPENDENCY_ANNOTATION, 
                 Value.value(new DependencyRelation(rootRelTag, false, null)));
+        }
+    }
+    
+    /**
+     * Adds annotations for coref mentions to the {@link Span}s in the {@link AnalysedText}
+     * 
+     * @param graph
+     * @param at
+     * @param sentences
+     */
+    private void addCorefMentions(Map<Integer, CorefChain> graph, AnalysedText at, List<CoreMap> sentences) {
+        for (Map.Entry<Integer, CorefChain> entry : graph.entrySet()) {
+            CorefChain chain = entry.getValue();
+            
+            CorefMention reprMention = chain.getRepresentativeMention();
+            List<CorefMention> mentions = chain.getMentionsInTextualOrder();
+            
+            /*
+             * We don't care about chains with only 1 mention because those contain
+             * only the representative mention without any other mention in the text.
+             */
+            if (mentions.size() < 2) {
+                continue;
+            }
+            
+            for (CorefMention mention : mentions) {
+                Span mentionedSpan = getSpanFromMention(at, sentences, mention);
+                Set<Span> mentionsAsSpans = new HashSet<Span>();
+                boolean isRepresentative = mention.equals(reprMention);
+                
+                for (CorefMention otherMention : mentions) {
+                    if (!otherMention.equals(mention)) {
+                        mentionsAsSpans.add(getSpanFromMention(at, sentences, otherMention));
+                    }
+                }
+                
+                mentionedSpan.addAnnotation(COREF_ANNOTATION, 
+                    Value.value(new CorefFeature(isRepresentative, mentionsAsSpans)));
+            }
+        }
+    }
+    
+    /**
+     * Returns the {@link Span} in the {@link AnalysedText} which corresponds
+     * to the given {@link CorefMention}
+     * 
+     * @param at
+     * @param sentences
+     * @param mention
+     * @return
+     */
+    private Span getSpanFromMention(AnalysedText at, List<CoreMap> sentences, CorefMention mention) {
+        CoreMap sentence = sentences.get(mention.sentNum - 1);
+        List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
+        
+        if (mention.endIndex - mention.startIndex > 1) {
+            CoreLabel startToken = tokens.get(mention.startIndex - 1);
+            CoreLabel endToken = tokens.get(mention.endIndex - 2);
+            
+            return at.addChunk(startToken.beginPosition(), endToken.endPosition());
+        } else {
+            CoreLabel token = tokens.get(mention.startIndex - 1);
+            
+            return at.addToken(token.beginPosition(), token.endPosition());
         }
     }
 }

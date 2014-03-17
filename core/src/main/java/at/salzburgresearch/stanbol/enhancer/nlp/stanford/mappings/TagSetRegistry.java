@@ -442,10 +442,9 @@ public class TagSetRegistry {
     }
     
     /*
-     * Dependency Tree TagSet definitions
+     * English Dependency Tree TagSet definitions
      */
     static {
-        //the default TagSet for the grammatical relation tags used for English
         TagSet<GrammaticalRelationTag> gramRelationTags = 
             new TagSet<GrammaticalRelationTag>("Default Stanford NLP Dependency Tree Tagset", "en");
         
@@ -469,6 +468,7 @@ public class TagSetRegistry {
         gramRelationTags.addTag(new GrammaticalRelationTag("cop", GrammaticalRelation.Copula));
         gramRelationTags.addTag(new GrammaticalRelationTag("dep", GrammaticalRelation.Dependent));
         gramRelationTags.addTag(new GrammaticalRelationTag("det", GrammaticalRelation.Determiner));
+        gramRelationTags.addTag(new GrammaticalRelationTag("discourse", GrammaticalRelation.Discourse));        
         gramRelationTags.addTag(new GrammaticalRelationTag("dobj", GrammaticalRelation.DirectObject));
         gramRelationTags.addTag(new GrammaticalRelationTag("expl", GrammaticalRelation.Expletive));
         gramRelationTags.addTag(new GrammaticalRelationTag("iobj", GrammaticalRelation.IndirectObject));

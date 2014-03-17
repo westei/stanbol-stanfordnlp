@@ -7,7 +7,7 @@
 # (5) Detect Named Entities
 # (6) Parse Tree
 # 
-annotators = tokenize, ssplit, pos, lemma, ner
+annotators = tokenize, ssplit, pos, lemma, ner, parse, dcoref
 
 # Optional Analyzers that could be added
 # regexner, parse
