@@ -320,21 +320,25 @@ public class StanfordNlpAnalyzer {
             int depIndex = edge.getDependent().index();
             GrammaticalRelation gramRel = edge.getRelation();
             GrammaticalRelationTag gramRelTag = relationTagSet.getTag(gramRel.getShortName());
-            boolean isDependent = false;
-            Span partner = null;
-            
-            if (govIndex == currentTokenIdx) {
-                CoreLabel dependentLabel = tokens.get(depIndex - 1);
-                partner = at.addToken(dependentLabel.beginPosition(), dependentLabel.endPosition());
-            } else if (depIndex == currentTokenIdx) {
-                isDependent = true;
-                CoreLabel governorLabel = tokens.get(govIndex - 1);
-                partner = at.addToken(governorLabel.beginPosition(), governorLabel.endPosition());
+            if(gramRelTag != null){
+	            boolean isDependent = false;
+	            Span partner = null;
+	            
+	            if (govIndex == currentTokenIdx) {
+	                CoreLabel dependentLabel = tokens.get(depIndex - 1);
+	                partner = at.addToken(dependentLabel.beginPosition(), dependentLabel.endPosition());
+	            } else if (depIndex == currentTokenIdx) {
+	                isDependent = true;
+	                CoreLabel governorLabel = tokens.get(govIndex - 1);
+	                partner = at.addToken(governorLabel.beginPosition(), governorLabel.endPosition());
+	            }
+	            
+	            currentToken.addAnnotation(DEPENDENCY_ANNOTATION, 
+	                Value.value(new DependencyRelation(gramRelTag, isDependent, partner)));
+            } else {
+            	log.warn("Missing GrammaticalRelationTag for {}!",gramRel.getShortName());
             }
-            
-            currentToken.addAnnotation(DEPENDENCY_ANNOTATION, 
-                Value.value(new DependencyRelation(gramRelTag, isDependent, partner)));
-        }
+	    }
         
         // Finally add the root relation if the word has any.
         Collection<IndexedWord> roots = dependencies.getRoots();

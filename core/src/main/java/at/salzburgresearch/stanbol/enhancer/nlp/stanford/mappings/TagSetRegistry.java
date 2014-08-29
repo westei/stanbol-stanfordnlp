@@ -502,7 +502,12 @@ public class TagSetRegistry {
         gramRelationTags.addTag(new GrammaticalRelationTag("rcmod", GrammaticalRelation.RelativeClauseModifier));
         gramRelationTags.addTag(new GrammaticalRelationTag("root", GrammaticalRelation.Root));
         gramRelationTags.addTag(new GrammaticalRelationTag("tmod", GrammaticalRelation.TemporalModifier));
-        
+        //added with 3.1.1
+        //vmod: reduced non-finite verbal modifier 
+        //  ... see definition in http://nlp.stanford.edu/software/dependencies_manual.pdf (page 10)
+        //TODO check if the mapping to GrammaticalRelation.InfinitivalModifier is correct
+        gramRelationTags.addTag(new GrammaticalRelationTag("vmod",GrammaticalRelation.InfinitivalModifier)); 
+
         getInstance().addDependencyTreeTagSet(gramRelationTags);
     }
 }

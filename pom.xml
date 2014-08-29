@@ -25,8 +25,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <stanford-parser-version>3.3.0</stanford-parser-version>
-    <stanford-corenlp-version>3.3.0</stanford-corenlp-version>
+    <stanford-nlp-version>3.3.1</stanford-nlp-version>
+    <stanford-parser-version>${stanford-nlp-version}</stanford-parser-version>
+    <stanford-corenlp-version>${stanford-nlp-version}</stanford-corenlp-version>
 	</properties>
 
 	<dependencyManagement>
