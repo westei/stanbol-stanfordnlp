@@ -1,4 +1,5 @@
-#!/bin/sh -e -o pipefail
+#/bin/sh -e -o pipefail
+#!/bin/bash
 
 RELEASE_DATE_v310=2013-11-12
 RELEASE_DATE_v311=2014-01-04
