@@ -425,9 +425,12 @@ public class TagSetRegistry {
         DEFAULT_NER_TAGSET.addTag(new NerTag("person", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("Person", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("PER", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("PERS", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("per", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("B-PERS", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("I-PERS", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-PER", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-PER", OntologicalClasses.DBPEDIA_PERSON));
 
         DEFAULT_NER_TAGSET.addTag(new NerTag("ORGANIZATION", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("organization", OntologicalClasses.DBPEDIA_ORGANISATION));
