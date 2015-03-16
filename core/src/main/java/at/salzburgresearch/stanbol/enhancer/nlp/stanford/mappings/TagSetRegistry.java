@@ -410,6 +410,15 @@ public class TagSetRegistry {
         nerTags.addTag(new NerTag("ORDINAL"));
         nerTags.addTag(new NerTag("NUMBER"));
         nerTags.addTag(new NerTag("PERCENT"));
+
+        nerTags.addTag(new NerTag("AilmentCondition", new UriRef("http://umbel.org/umbel/rc/AilmentCondition")));
+        nerTags.addTag(new NerTag("DrugProduct", new UriRef("http://umbel.org/umbel/rc/DrugProduct")));
+
+        nerTags.addTag(new NerTag("DISEASE", new UriRef("http://www4.wiwiss.fu-berlin.de/diseasome/resource/diseasome/diseases")));
+        nerTags.addTag(new NerTag("DRUG", new UriRef("http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugs")));
+        nerTags.addTag(new NerTag("SIDE_EFFECT", new UriRef("http://www4.wiwiss.fu-berlin.de/sider/resource/sider/side_effects")));
+        nerTags.addTag(new NerTag("INGREDIENT", new UriRef("http://www4.wiwiss.fu-berlin.de/dailymed/resource/dailymed/ingredients")));
+
         getInstance().addNerTagSet(nerTags);
         
     }
