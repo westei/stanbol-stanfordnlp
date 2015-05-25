@@ -3,5 +3,6 @@
 # (1) Segmentation the text to words
 # (2) Split the text into Sentences
 # (3) POS tags sentences
+# (4) Detect Named Entities
 # 
-annotators = tokenize, ssplit, segment, pos
+annotators = tokenize, ssplit, segment, pos, ner

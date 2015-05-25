@@ -410,6 +410,15 @@ public class TagSetRegistry {
         nerTags.addTag(new NerTag("ORDINAL"));
         nerTags.addTag(new NerTag("NUMBER"));
         nerTags.addTag(new NerTag("PERCENT"));
+
+        nerTags.addTag(new NerTag("AilmentCondition", new UriRef("http://umbel.org/umbel/rc/AilmentCondition")));
+        nerTags.addTag(new NerTag("DrugProduct", new UriRef("http://umbel.org/umbel/rc/DrugProduct")));
+
+        nerTags.addTag(new NerTag("DISEASE", new UriRef("http://www4.wiwiss.fu-berlin.de/diseasome/resource/diseasome/diseases")));
+        nerTags.addTag(new NerTag("DRUG", new UriRef("http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugs")));
+        nerTags.addTag(new NerTag("SIDE_EFFECT", new UriRef("http://www4.wiwiss.fu-berlin.de/sider/resource/sider/side_effects")));
+        nerTags.addTag(new NerTag("INGREDIENT", new UriRef("http://www4.wiwiss.fu-berlin.de/dailymed/resource/dailymed/ingredients")));
+
         getInstance().addNerTagSet(nerTags);
         
     }
@@ -420,11 +429,18 @@ public class TagSetRegistry {
      */
     private static final TagSet<NerTag> DEFAULT_NER_TAGSET = new TagSet<NerTag>("Fallback NER Tagset");
     static {
+
         DEFAULT_NER_TAGSET.addTag(new NerTag("PERSON", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("person", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("Person", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("PER", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("PERS", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("per", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-PERS", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-PERS", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-PER", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-PER", OntologicalClasses.DBPEDIA_PERSON));
+
         DEFAULT_NER_TAGSET.addTag(new NerTag("ORGANIZATION", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("organization", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("Organization", OntologicalClasses.DBPEDIA_ORGANISATION));
@@ -433,11 +449,16 @@ public class TagSetRegistry {
         DEFAULT_NER_TAGSET.addTag(new NerTag("Organisation", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("ORG", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("org", OntologicalClasses.DBPEDIA_ORGANISATION));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-ORG", OntologicalClasses.DBPEDIA_ORGANISATION));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-ORG", OntologicalClasses.DBPEDIA_ORGANISATION));
+
         DEFAULT_NER_TAGSET.addTag(new NerTag("LOCATION", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("Location", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("location", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("LOC", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("loc", OntologicalClasses.DBPEDIA_PLACE));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-LOC", OntologicalClasses.DBPEDIA_PLACE));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-LOC", OntologicalClasses.DBPEDIA_PLACE));
 
     }
     
