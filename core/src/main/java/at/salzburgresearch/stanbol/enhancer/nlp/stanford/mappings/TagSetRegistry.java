@@ -425,6 +425,11 @@ public class TagSetRegistry {
         DEFAULT_NER_TAGSET.addTag(new NerTag("Person", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("PER", OntologicalClasses.DBPEDIA_PERSON));
         DEFAULT_NER_TAGSET.addTag(new NerTag("per", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-PERS", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-PERS", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-PER", OntologicalClasses.DBPEDIA_PERSON));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-PER", OntologicalClasses.DBPEDIA_PERSON));
+      
         DEFAULT_NER_TAGSET.addTag(new NerTag("ORGANIZATION", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("organization", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("Organization", OntologicalClasses.DBPEDIA_ORGANISATION));
@@ -433,11 +438,16 @@ public class TagSetRegistry {
         DEFAULT_NER_TAGSET.addTag(new NerTag("Organisation", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("ORG", OntologicalClasses.DBPEDIA_ORGANISATION));
         DEFAULT_NER_TAGSET.addTag(new NerTag("org", OntologicalClasses.DBPEDIA_ORGANISATION));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-ORG", OntologicalClasses.DBPEDIA_ORGANISATION));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-ORG", OntologicalClasses.DBPEDIA_ORGANISATION));
+      
         DEFAULT_NER_TAGSET.addTag(new NerTag("LOCATION", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("Location", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("location", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("LOC", OntologicalClasses.DBPEDIA_PLACE));
         DEFAULT_NER_TAGSET.addTag(new NerTag("loc", OntologicalClasses.DBPEDIA_PLACE));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("B-LOC", OntologicalClasses.DBPEDIA_PLACE));
+        DEFAULT_NER_TAGSET.addTag(new NerTag("I-LOC", OntologicalClasses.DBPEDIA_PLACE));
 
     }
     

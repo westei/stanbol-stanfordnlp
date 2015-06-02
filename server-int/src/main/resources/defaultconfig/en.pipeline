@@ -5,8 +5,13 @@
 # (3) POS tags sentences
 # (4) Lemmatize words
 # (5) Detect Named Entities
-# 
-annotators = tokenize, ssplit, pos, lemma, ner
+# (6) Parse Tree
+# (7) Sentiment (requires Parse Tree)
+
+annotators = tokenize, ssplit, pos, lemma, ner, parse, sentiment
+
+#Simpler pipeline without sentiment analysis
+#annotators = tokenize, ssplit, pos, lemma, ner
 
 # Optional Analyzers that could be added
 # regexner

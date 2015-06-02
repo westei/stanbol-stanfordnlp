@@ -6,8 +6,11 @@
 # (4) Lemmatize words
 # (5) Detect Named Entities
 # (6) Parse Tree
+# (7) Sentiment (requires Parse Tree)
 # 
-annotators = tokenize, ssplit, pos, lemma, ner, parse, dcoref
+#annotators = tokenize, ssplit, pos, lemma, ner, parse, dcoref, sentiment
+
+annotators = tokenize, ssplit, pos, lemma, ner, parse, sentiment
 
 # Optional Analyzers that could be added
 # regexner, parse

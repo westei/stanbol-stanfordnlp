@@ -1,5 +1,6 @@
 package at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser;
 
+import static edu.stanford.nlp.pipeline.Annotator.STANFORD_SENTIMENT;
 import static edu.stanford.nlp.pipeline.StanfordCoreNLP.*;
 
 import java.io.File;
@@ -41,6 +42,7 @@ import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.pipeline.PTBTokenizerAnnotator;
 import edu.stanford.nlp.pipeline.ParserAnnotator;
 import edu.stanford.nlp.pipeline.RegexNERAnnotator;
+import edu.stanford.nlp.pipeline.SentimentAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.pipeline.WhitespaceTokenizerAnnotator;
 import edu.stanford.nlp.pipeline.WordsToSentencesAnnotator;
@@ -454,6 +456,31 @@ public class LangPipeline extends AnnotationPipeline {
         }
     }
     
+    private class SentimentFactory extends AnnotatorFactory {
+        private static final long serialVersionUID = 1L;
+        /**
+         * the properties.<p>
+         * <b>NOTE:</b> Con not use protected field in super class, because is
+         * copies the parsed properties and therefore looses the defaults (parent
+         * properties)
+         */
+        private final Properties properties;
+        public SentimentFactory(Properties properties) {
+            super(DUMMY_PROPERTIES); //Not used
+            this.properties = properties;
+        }
+
+        @Override
+        public Annotator create() {
+          return new SentimentAnnotator(STANFORD_SENTIMENT, properties);
+        }
+
+        @Override
+        public String signature() {
+            return "";
+        }
+    }
+    
     private final AnnotatorPool pool = new AnnotatorPool();
 
     private String language;
@@ -569,6 +596,7 @@ public class LangPipeline extends AnnotationPipeline {
         pool.register(STANFORD_LEMMA, new LemmatizerFactory(properties));
         pool.register(STANFORD_SEGMENT, new SegmentorFactory(properties));
         pool.register(STANFORD_DETERMINISTIC_COREF, new DeterministicCorefFactory(properties));
+        pool.register(STANFORD_SENTIMENT, new SentimentFactory(properties));
     }
 
     public String getLanguage() {

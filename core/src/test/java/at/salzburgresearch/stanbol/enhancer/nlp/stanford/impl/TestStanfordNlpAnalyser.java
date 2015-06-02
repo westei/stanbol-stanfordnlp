@@ -113,10 +113,25 @@ public class TestStanfordNlpAnalyser {
 
     @Test
     public void testAnalysis() throws IOException {
+        long sum = 0;
+        long min = Long.MAX_VALUE;
+        long max = 0;
         for(Entry<String,Blob> example : examples.entrySet()){
+            long start = System.currentTimeMillis();
             AnalysedText at = analyzer.analyse("en",example.getValue());
+            long dur = System.currentTimeMillis() - start;
+            if(dur < min){
+                min = dur;
+            }
+            if(dur > max){
+                max = dur;
+            }
+            sum = sum + dur;
+            log.info(" > completed {} in {}ms", example.getKey(), dur);
             validateAnalysedText(at.getSpan(), at);
         }
+        log.info(" completed {} tests in {}sec (avg: {}ms, min: {}ms, max: {}ms)",new Object[]{
+                examples.size(),Math.round(sum/100d)/10f, Math.round(sum*10/(double)examples.size())/10f, min, max});
 	}
 
     @Test

@@ -5,9 +5,11 @@ import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.NER_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.DEPENDENCY_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.COREF_ANNOTATION;
+import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.SENTIMENT_ANNOTATION;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,12 +22,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.stanbol.enhancer.nlp.NlpAnnotations;
 import org.apache.stanbol.enhancer.nlp.coref.CorefFeature;
 import org.apache.stanbol.enhancer.nlp.dependency.DependencyRelation;
 import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedTextFactory;
 import org.apache.stanbol.enhancer.nlp.model.Chunk;
+import org.apache.stanbol.enhancer.nlp.model.Sentence;
 import org.apache.stanbol.enhancer.nlp.model.Span;
 import org.apache.stanbol.enhancer.nlp.model.Token;
 import org.apache.stanbol.enhancer.nlp.model.annotation.Value;
@@ -34,6 +38,7 @@ import org.apache.stanbol.enhancer.nlp.morpho.MorphoFeatures;
 import org.apache.stanbol.enhancer.nlp.ner.NerTag;
 import org.apache.stanbol.enhancer.nlp.pos.PosTag;
 import org.apache.stanbol.enhancer.servicesapi.Blob;
+import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +53,15 @@ import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.AnnotationPipeline;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import edu.stanford.nlp.trees.GrammaticalRelation;
+import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 
 public class StanfordNlpAnalyzer {
@@ -270,8 +278,27 @@ public class StanfordNlpAnalyzer {
                     addDependencyRelations(tokens, t, at, gramRelationTagSet, dependencies, ++tokenIdxInSentence);
                 }
             } //end iterate over tokens in sentence
-            //clean up sentence
-            at.addSentence(sentStart.getStart(), sentEnd.getEnd());
+            //add the Sentence
+            Sentence sent = at.addSentence(sentStart.getStart(), sentEnd.getEnd());
+            //Sentiment for the Sentence
+            String sentimentClass = sentence.get(SentimentCoreAnnotations.ClassName.class);
+            Tree sentimentTree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
+            if(sentimentTree != null){
+                SimpleMatrix predictions = RNNCoreAnnotations.getPredictions(sentimentTree);
+                int sentiment = RNNCoreAnnotations.getPredictedClass(sentimentTree);
+                predictions.isVector();
+                int size = Math.max(predictions.numCols(),predictions.numRows());
+                double[] values = new double[size];
+                for(int i=0;i<size;i++){
+                    values[i] = predictions.get(i);
+                }
+                log.info(" - sentiment: {}(idx:{}){}", new Object[]{
+                        sentimentClass, sentiment, Arrays.toString(values)});
+                //TODO: Calculate the double [-1..+1] sentiment value and add the annotation
+                Double sentimentValue = null;
+                //sent.addAnnotation(SENTIMENT_ANNOTATION, Value.value(sentimentValue));
+            }
+            //clean up the sentence
             sentStart = null;
             sentEnd = null;
             //we might have still an open NER annotation
