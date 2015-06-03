@@ -418,6 +418,7 @@ public class TagSetRegistry {
         nerTags.addTag(new NerTag("DRUG", new UriRef("http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugs")));
         nerTags.addTag(new NerTag("SIDE_EFFECT", new UriRef("http://www4.wiwiss.fu-berlin.de/sider/resource/sider/side_effects")));
         nerTags.addTag(new NerTag("INGREDIENT", new UriRef("http://www4.wiwiss.fu-berlin.de/dailymed/resource/dailymed/ingredients")));
+        nerTags.addTag(new NerTag("TREATMENT", new UriRef("http://www.behaviormatrix.com/MedicalTreatment")));
 
         getInstance().addNerTagSet(nerTags);
         
