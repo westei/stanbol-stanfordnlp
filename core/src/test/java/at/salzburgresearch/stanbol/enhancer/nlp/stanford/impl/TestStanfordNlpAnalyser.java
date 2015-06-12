@@ -16,12 +16,6 @@
  */
 package at.salzburgresearch.stanbol.enhancer.nlp.stanford.impl;
 
-import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.NER_ANNOTATION;
-import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.PHRASE_ANNOTATION;
-import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.POS_ANNOTATION;
-import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.DEPENDENCY_ANNOTATION;
-import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.COREF_ANNOTATION;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -42,6 +36,7 @@ import org.apache.stanbol.enhancer.nlp.coref.CorefFeature;
 import org.apache.stanbol.enhancer.nlp.dependency.DependencyRelation;
 import org.apache.stanbol.enhancer.nlp.dependency.GrammaticalRelationTag;
 import org.apache.stanbol.enhancer.nlp.model.AnalysedText;
+import org.apache.stanbol.enhancer.nlp.model.Sentence;
 import org.apache.stanbol.enhancer.nlp.model.Span;
 import org.apache.stanbol.enhancer.nlp.model.SpanTypeEnum;
 import org.apache.stanbol.enhancer.nlp.model.annotation.Value;
@@ -61,6 +56,8 @@ import org.slf4j.LoggerFactory;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.LangPipeline;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.StanfordNlpAnalyzer;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.mappings.TagSetRegistry;
+
+import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.*;
 
 public class TestStanfordNlpAnalyser {
 
@@ -129,6 +126,7 @@ public class TestStanfordNlpAnalyser {
             sum = sum + dur;
             log.info(" > completed {} in {}ms", example.getKey(), dur);
             validateAnalysedText(at.getSpan(), at);
+            sentimentAnalysisTest( at);
         }
         log.info(" completed {} tests in {}sec (avg: {}ms, min: {}ms, max: {}ms)",new Object[]{
                 examples.size(),Math.round(sum/100d)/10f, Math.round(sum*10/(double)examples.size())/10f, min, max});
@@ -294,8 +292,24 @@ public class TestStanfordNlpAnalyser {
             }
         }
     }
-    
-    
+
+    private void sentimentAnalysisTest(AnalysedText at){
+
+        Iterator<Sentence> it = at.getSentences();
+
+        while(it.hasNext()){
+            //validate that the span|start|end corresponds with the Text
+            Sentence sentence = it.next();
+
+            Value<Double> sentimentValue = sentence.getAnnotation(SENTIMENT_ANNOTATION);
+            Assert.assertTrue("All sentences should have a sentiment value in between the spected ranges (in the " +
+                    "continuous range [-1.0, 1.0])", sentimentValue.value().compareTo(-1.0)>=0 &
+                    sentimentValue.value().compareTo(1.0) <= 0);
+
+        }
+    }
+
+
     @AfterClass
     public static final void cleanUp(){
         executorService.shutdown();

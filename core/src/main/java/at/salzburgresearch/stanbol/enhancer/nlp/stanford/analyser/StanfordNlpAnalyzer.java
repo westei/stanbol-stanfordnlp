@@ -8,6 +8,7 @@ import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.COREF_ANNOTATION;
 import static org.apache.stanbol.enhancer.nlp.NlpAnnotations.SENTIMENT_ANNOTATION;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -294,9 +295,11 @@ public class StanfordNlpAnalyzer {
                 }
                 log.info(" - sentiment: {}(idx:{}){}", new Object[]{
                         sentimentClass, sentiment, Arrays.toString(values)});
-                //TODO: Calculate the double [-1..+1] sentiment value and add the annotation
-                Double sentimentValue = null;
-                //sent.addAnnotation(SENTIMENT_ANNOTATION, Value.value(sentimentValue));
+
+                //Calculating sentiment for a sentence
+                Double sentimentValue = sentimentValueCalculation(predictions);
+                //Annotating sentence with the calculated sentiment value
+                sent.addAnnotation(SENTIMENT_ANNOTATION, Value.value(sentimentValue));
             }
             //clean up the sentence
             sentStart = null;
@@ -318,6 +321,37 @@ public class StanfordNlpAnalyzer {
         }
 
         return at;
+    }
+
+    /**
+     * Calculate de sentiment value of a sentence based on a Stanford predictions vector.
+     *
+     * @param sentimentVector Is the SimplexMatrix containing the predictions resulted from stanford sentiment analysis
+     *                        for this sentence.
+     * @return A Double value containing the calculated sentiment for the sentence.
+     */
+    private Double sentimentValueCalculation(SimpleMatrix sentimentVector ){
+
+       final int STANFORD_CLASSES = 5;
+        Double calculatedSentiment = 0.0;
+
+        for(int indexClass = 0 ; indexClass < STANFORD_CLASSES ; indexClass ++){
+            calculatedSentiment += sentimentVector.get(indexClass) * this.getIndexWeight(indexClass);
+        }
+
+        return calculatedSentiment;
+    }
+
+    /**
+     * Return the sentiment weight for a given index of the prediction vector.
+     *
+     * @param index the index on the prediction vector which is asked for its sentiment weight.
+     * @return A Double value representing the sentiment weight for the specific position on the prediction vector.
+     */
+    private Double getIndexWeight(int index) {
+
+        final List<Double> weightVector = Arrays.asList(-1.0, -0.5,0.0,0.5,1.0);
+         return weightVector.get(index);
     }
     
     /**
