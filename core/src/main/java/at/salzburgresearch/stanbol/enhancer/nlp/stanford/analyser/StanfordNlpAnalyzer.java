@@ -43,6 +43,8 @@ import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.sentiment.LinearSentimentClassMapping;
+import at.salzburgresearch.stanbol.enhancer.nlp.stanford.analyser.sentiment.SentimentClassMapping;
 import at.salzburgresearch.stanbol.enhancer.nlp.stanford.mappings.TagSetRegistry;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
@@ -66,6 +68,7 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 
 public class StanfordNlpAnalyzer {
+    
 
     private static final Logger log = LoggerFactory.getLogger(StanfordNlpAnalyzer.class);
 
@@ -179,6 +182,9 @@ public class StanfordNlpAnalyzer {
         // a CoreMap is essentially a Map that uses class objects as keys and has values with custom types
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
         
+        //lazily initialized when we need to process sentiment annotations
+        SentimentClassMapping sentClassMapping = null;
+        
         for (CoreMap sentence : sentences) {
             // traversing the words in the current sentence
             // a CoreLabel is a CoreMap with additional token-specific methods
@@ -285,21 +291,39 @@ public class StanfordNlpAnalyzer {
             String sentimentClass = sentence.get(SentimentCoreAnnotations.ClassName.class);
             Tree sentimentTree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
             if(sentimentTree != null){
+                //we can not use the class as we want a double value
+                //int sentiment = RNNCoreAnnotations.getPredictedClass(sentimentTree);
                 SimpleMatrix predictions = RNNCoreAnnotations.getPredictions(sentimentTree);
-                int sentiment = RNNCoreAnnotations.getPredictedClass(sentimentTree);
-                predictions.isVector();
-                int size = Math.max(predictions.numCols(),predictions.numRows());
-                double[] values = new double[size];
-                for(int i=0;i<size;i++){
-                    values[i] = predictions.get(i);
+                int size = predictions.getNumElements();
+                if(sentClassMapping == null){
+                    log.debug(" - {} sentiment classes detected", size);
+                    sentClassMapping = new LinearSentimentClassMapping(size);
                 }
-                log.info(" - sentiment: {}(idx:{}){}", new Object[]{
-                        sentimentClass, sentiment, Arrays.toString(values)});
-
-                //Calculating sentiment for a sentence
-                Double sentimentValue = sentimentValueCalculation(predictions);
+                if(log.isDebugEnabled()){
+                    double[] values = new double[size];
+                    for(int i=0;i < size;i++){
+                        values[i] = predictions.get(i);
+                    }
+                    log.debug(" - sentiment: {}[classes: {}]", new Object[]{
+                            sentimentClass, Arrays.toString(values)});
+                }
+                //sum up the predictions of the different classes
+                double sentimentValue = 0;
+                for(int idx = 0 ; idx < size ; idx ++){
+                    double idxSent = sentClassMapping.getIndexWeight(idx);
+                    if(!Double.isNaN(idxSent)){
+                        sentimentValue += predictions.get(idx) * idxSent;
+                    } else { //sentiment classes can not be converted to a number
+                        sentimentValue = Double.NaN;
+                        break;
+                    }
+                }
                 //Annotating sentence with the calculated sentiment value
-                sent.addAnnotation(SENTIMENT_ANNOTATION, Value.value(sentimentValue));
+                if(!Double.isNaN(sentimentValue)){
+                    //TODO: provide a better sentiment annotation where we can
+                    //      also parse information about the detected class
+                    sent.addAnnotation(SENTIMENT_ANNOTATION, Value.value(sentimentValue));
+                }
             }
             //clean up the sentence
             sentStart = null;
@@ -323,37 +347,6 @@ public class StanfordNlpAnalyzer {
         return at;
     }
 
-    /**
-     * Calculate de sentiment value of a sentence based on a Stanford predictions vector.
-     *
-     * @param sentimentVector Is the SimplexMatrix containing the predictions resulted from stanford sentiment analysis
-     *                        for this sentence.
-     * @return A Double value containing the calculated sentiment for the sentence.
-     */
-    private Double sentimentValueCalculation(SimpleMatrix sentimentVector ){
-
-       final int STANFORD_CLASSES = 5;
-        Double calculatedSentiment = 0.0;
-
-        for(int indexClass = 0 ; indexClass < STANFORD_CLASSES ; indexClass ++){
-            calculatedSentiment += sentimentVector.get(indexClass) * this.getIndexWeight(indexClass);
-        }
-
-        return calculatedSentiment;
-    }
-
-    /**
-     * Return the sentiment weight for a given index of the prediction vector.
-     *
-     * @param index the index on the prediction vector which is asked for its sentiment weight.
-     * @return A Double value representing the sentiment weight for the specific position on the prediction vector.
-     */
-    private Double getIndexWeight(int index) {
-
-        final List<Double> weightVector = Arrays.asList(-1.0, -0.5,0.0,0.5,1.0);
-         return weightVector.get(index);
-    }
-    
     /**
      * Add dependency tree annotations to the current token.
      * 
