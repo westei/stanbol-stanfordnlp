@@ -1,5 +1,8 @@
 *.class
 
+# Target directories that contain built package files
+target
+
 # Package Files #
 *.jar
 *.war
