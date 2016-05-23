@@ -7,7 +7,7 @@ Apache Stanbol Stanford NLP integration
 
 All dependencies of this project are downloaded from Maven central. Cloning and building the project by using 
 
-    mvm clean install
+    mvn clean install -Dmaven.test.skip=true
     
 is everything that is required for using the English only server.
 

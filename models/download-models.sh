@@ -1,4 +1,6 @@
-#!/bin/sh -e -o pipefail
+#!/bin/bash
+
+command -v unzip >/dev/null 2>&1 || { echo >&2 "This script requires unzip to work, please install and run the script again. Aborting"; exit 1; }
 
 RELEASE_DATE_v310=2013-11-12
 RELEASE_DATE_v311=2014-01-04
